@@ -1,0 +1,112 @@
+name: Build and Deploy Tasky
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "kubernetes/**"
+      - ".github/workflows/build-and-deploy.yaml"
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "kubernetes/**"
+      - ".github/workflows/build-and-deploy.yaml"
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: wiz-exercise
+  EKS_CLUSTER: wiz-exercise-eks
+  K8S_NAMESPACE: wiz-exercise
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-scan:
+    name: Build and scan Docker image
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        id: build
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest app/
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Scan container image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.build.outputs.image }}
+          format: table
+          exit-code: 1
+          severity: CRITICAL,HIGH
+
+      - name: Push image to ECR
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+  deploy:
+    name: Deploy to EKS
+    needs: build-and-scan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
+
+      - name: Apply namespace, RBAC, and service
+        run: |
+          kubectl apply -f kubernetes/namespace.yaml
+          kubectl apply -f kubernetes/rbac.yaml
+          kubectl apply -f kubernetes/service.yaml
+          kubectl apply -f kubernetes/ingress.yaml
+
+      - name: Sync secrets from AWS Secrets Manager
+        env:
+          PROJECT_NAME: wiz-exercise
+        run: |
+          chmod +x scripts/create-k8s-secrets.sh
+          ./scripts/create-k8s-secrets.sh
+
+      - name: Deploy with resolved ECR image
+        env:
+          ECR_IMAGE: ${{ needs.build-and-scan.outputs.image }}
+        run: |
+          envsubst '${ECR_IMAGE}' < kubernetes/deployment.yaml | kubectl apply -f -
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/tasky -n $K8S_NAMESPACE --timeout=300s

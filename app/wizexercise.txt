@@ -1,0 +1,3 @@
+Wiz Technical Exercise
+Candidate: Carlos Alberto Galeana Betancourt
+Purpose: Demonstration of container image content
