@@ -32,6 +32,11 @@ variable "github_oidc_subject" {
   description = "OIDC subject claim prefix from GitHub (Settings > Security > Code security > OIDC customization)"
 }
 
+variable "cluster_admin_arn" {
+  type        = string
+  description = "IAM ARN of the cluster administrator (user or role)"
+}
+
 variable "alarm_email" {
   type        = string
   description = "Email for CloudWatch alarm notifications"
