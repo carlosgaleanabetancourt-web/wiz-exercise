@@ -1,15 +1,15 @@
 variable "aws_region" {
-  type = string
+  type    = string
   default = "us-east-1"
 }
 
 variable "project_name" {
-  type = string
+  type    = string
   default = "wiz-exercise"
 }
 
 variable "candidate_name" {
-  type = string
+  type    = string
   default = "Carlos Alberto Galeana Betancourt"
 }
 
@@ -18,22 +18,22 @@ variable "ssh_public_key" {
 }
 
 variable "admin_cidrs" {
-  type = list(string)
+  type        = list(string)
   description = "CIDRs allowed to reach the EKS public API"
 }
 
 variable "github_repo" {
-  type = string
+  type        = string
   description = "GitHub repo in owner/repo format for OIDC trust"
 }
 
 variable "github_oidc_subject" {
-  type = string
+  type        = string
   description = "OIDC subject claim prefix from GitHub (Settings > Security > Code security > OIDC customization)"
 }
 
 variable "alarm_email" {
-  type = string
+  type        = string
   description = "Email for CloudWatch alarm notifications"
-  default = ""
+  default     = ""
 }

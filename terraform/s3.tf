@@ -1,14 +1,14 @@
 resource "random_string" "bucket_suffix" {
-  length = 8
+  length  = 8
   special = false
-  upper = false
+  upper   = false
 }
 
 resource "aws_s3_bucket" "backup" {
   bucket = "${var.project_name}-backup-${random_string.bucket_suffix.result}"
 
   tags = {
-    Name = "${var.project_name}-backup"
+    Name    = "${var.project_name}-backup"
     Purpose = "Wiz Technical Exercise"
   }
 }
@@ -35,7 +35,7 @@ resource "aws_s3_bucket" "backup_access_logs" {
   bucket = "${var.project_name}-backup-logs-${random_string.bucket_suffix.result}"
 
   tags = {
-    Name = "${var.project_name}-backup-access-logs"
+    Name    = "${var.project_name}-backup-access-logs"
     Purpose = "Wiz Exercise"
   }
 }
@@ -43,9 +43,9 @@ resource "aws_s3_bucket" "backup_access_logs" {
 resource "aws_s3_bucket_public_access_block" "backup_access_logs" {
   bucket = aws_s3_bucket.backup_access_logs.id
 
-  block_public_acls = true
-  block_public_policy = true
-  ignore_public_acls = true
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
   restrict_public_buckets = true
 }
 
@@ -70,9 +70,9 @@ resource "aws_s3_bucket_public_access_block" "backup" {
   bucket = aws_s3_bucket.backup.id
 
   # Public read and listing
-  block_public_acls = false
-  block_public_policy = false
-  ignore_public_acls = false
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
   restrict_public_buckets = false
 }
 
@@ -84,7 +84,7 @@ resource "aws_s3_bucket_policy" "backup_public" {
 
     Statement = [
       {
-        Sid = "PublicRead"
+        Sid    = "PublicRead"
         Effect = "Allow"
 
         Principal = "*"
@@ -96,7 +96,7 @@ resource "aws_s3_bucket_policy" "backup_public" {
         Resource = "${aws_s3_bucket.backup.arn}/*"
       },
       {
-        Sid = "PublicList"
+        Sid    = "PublicList"
         Effect = "Allow"
 
         Principal = "*"

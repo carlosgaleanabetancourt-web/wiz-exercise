@@ -34,7 +34,7 @@ resource "aws_iam_role_policy" "mongodb_s3_backup" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AllowBackupUpload"
+        Sid    = "AllowBackupUpload"
         Effect = "Allow"
         Action = [
           "s3:PutObject"
@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "mongodb_s3_backup" {
         Resource = "${aws_s3_bucket.backup.arn}/*"
       },
       {
-        Sid = "AllowBackupList"
+        Sid    = "AllowBackupList"
         Effect = "Allow"
         Action = [
           "s3:ListBucket"
@@ -61,7 +61,7 @@ resource "aws_iam_role_policy" "mongodb_secrets_manager" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AllowGetCredentials"
+        Sid    = "AllowGetCredentials"
         Effect = "Allow"
         Action = [
           "secretsmanager:GetSecretValue"
@@ -82,7 +82,7 @@ resource "aws_iam_role_policy" "mongodb_cloudwatch_logs" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AllowCloudWatchLogs"
+        Sid    = "AllowCloudWatchLogs"
         Effect = "Allow"
         Action = [
           "logs:CreateLogGroup",
@@ -104,7 +104,7 @@ resource "aws_iam_role_policy" "mongodb_ec2_access" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AllowEC2Operations"
+        Sid    = "AllowEC2Operations"
         Effect = "Allow"
         Action = [
           "ec2:RunInstances",
@@ -121,8 +121,8 @@ resource "aws_iam_role_policy" "mongodb_ec2_access" {
 }
 
 resource "aws_iam_openid_connect_provider" "github_actions" {
-  url = "https://token.actions.githubusercontent.com"
-  client_id_list = ["sts.amazonaws.com"]
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = []
 }
 
@@ -163,7 +163,7 @@ resource "aws_iam_role_policy" "github_actions_ecr" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AllowECRAuth"
+        Sid    = "AllowECRAuth"
         Effect = "Allow"
         Action = [
           "ecr:GetAuthorizationToken"
@@ -171,7 +171,7 @@ resource "aws_iam_role_policy" "github_actions_ecr" {
         Resource = "*"
       },
       {
-        Sid = "AllowECRPush"
+        Sid    = "AllowECRPush"
         Effect = "Allow"
         Action = [
           "ecr:BatchCheckLayerAvailability",
@@ -196,7 +196,7 @@ resource "aws_iam_role_policy" "github_actions_eks" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AllowEKSAccess"
+        Sid    = "AllowEKSAccess"
         Effect = "Allow"
         Action = [
           "eks:DescribeCluster",
@@ -216,7 +216,7 @@ resource "aws_iam_role_policy" "github_actions_secrets" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AllowSecretsRead"
+        Sid    = "AllowSecretsRead"
         Effect = "Allow"
         Action = [
           "secretsmanager:GetSecretValue"

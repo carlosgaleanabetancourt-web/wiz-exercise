@@ -36,30 +36,30 @@ output "mongodb_instance_profile" {
 
 output "github_actions_role_arn" {
   description = "AWS_ROLE_ARN for GitHub Actions"
-  value = aws_iam_role.github_actions.arn
+  value       = aws_iam_role.github_actions.arn
 }
 
 output "backup_access_logs_bucket" {
   description = "S3 bucket storing access logs for the backup bucket"
-  value = aws_s3_bucket.backup_access_logs.bucket
+  value       = aws_s3_bucket.backup_access_logs.bucket
 }
 
 output "sns_alarms_topic_arn" {
   description = "SNS topic ARN for CloudWatch alarm notifications"
-  value = aws_sns_topic.alarms.arn
+  value       = aws_sns_topic.alarms.arn
 }
 
 output "config_bucket" {
   description = "S3 bucket storing AWS Config snapshots"
-  value = aws_s3_bucket.config.bucket
+  value       = aws_s3_bucket.config.bucket
 }
 
 output "ecr_repository_url" {
   description = "ECR repository URL for the application image"
-  value = aws_ecr_repository.app.repository_url
+  value       = aws_ecr_repository.app.repository_url
 }
 
 output "guardduty_detector_id" {
   description = "GuardDuty detector ID"
-  value = aws_guardduty_detector.main.id
+  value       = aws_guardduty_detector.main.id
 }

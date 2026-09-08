@@ -4,23 +4,23 @@ data "aws_ami" "mongodb" {
   owners = ["099720109477"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
   filter {
-    name = "virtualization-type"
+    name   = "virtualization-type"
     values = ["hvm"]
   }
 }
 
 resource "aws_key_pair" "exercise" {
-  key_name = "${var.project_name}-key"
+  key_name   = "${var.project_name}-key"
   public_key = var.ssh_public_key
 }
 
 resource "aws_instance" "mongodb" {
-  ami = data.aws_ami.mongodb.id
+  ami           = data.aws_ami.mongodb.id
   instance_type = "t3.micro"
 
   subnet_id = module.vpc.public_subnets[0]
@@ -133,7 +133,7 @@ resource "aws_instance" "mongodb" {
               EOF
 
   tags = {
-    Name = "${var.project_name}-mongodb"
+    Name    = "${var.project_name}-mongodb"
     Purpose = "Wiz Technical Exercise"
   }
 }

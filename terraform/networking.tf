@@ -3,7 +3,7 @@ data "aws_availability_zones" "available" {
 }
 
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
 
   name = "${var.project_name}-vpc"
@@ -26,7 +26,7 @@ module "vpc" {
   single_nat_gateway = false
 
   enable_dns_hostnames = true
-  enable_dns_support = true
+  enable_dns_support   = true
 
   tags = {
     Project = var.project_name
@@ -42,15 +42,15 @@ module "vpc" {
 }
 
 resource "aws_flow_log" "vpc" {
-  vpc_id = module.vpc.vpc_id
-  traffic_type = "ALL"
+  vpc_id               = module.vpc.vpc_id
+  traffic_type         = "ALL"
   log_destination_type = "cloud-watch-logs"
-  log_destination = aws_cloudwatch_log_group.vpc_flow_logs.arn
-  iam_role_arn = aws_iam_role.vpc_flow_logs.arn
+  log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
+  iam_role_arn         = aws_iam_role.vpc_flow_logs.arn
 }
 
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
-  name = "/${var.project_name}/vpc-flow-logs"
+  name              = "/${var.project_name}/vpc-flow-logs"
   retention_in_days = 30
 }
 

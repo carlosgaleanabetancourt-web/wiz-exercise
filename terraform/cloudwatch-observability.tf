@@ -22,18 +22,18 @@ resource "aws_iam_role" "cloudwatch_observability" {
 }
 
 resource "aws_iam_role_policy_attachment" "cloudwatch_observability" {
-  role = aws_iam_role.cloudwatch_observability.name
+  role       = aws_iam_role.cloudwatch_observability.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
 resource "aws_iam_role_policy_attachment" "cloudwatch_observability_xray" {
-  role = aws_iam_role.cloudwatch_observability.name
+  role       = aws_iam_role.cloudwatch_observability.name
   policy_arn = "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess"
 }
 
 resource "aws_eks_addon" "cloudwatch_observability" {
-  cluster_name = module.eks.cluster_name
-  addon_name = "amazon-cloudwatch-observability"
+  cluster_name             = module.eks.cluster_name
+  addon_name               = "amazon-cloudwatch-observability"
   service_account_role_arn = aws_iam_role.cloudwatch_observability.arn
 
   depends_on = [module.eks]

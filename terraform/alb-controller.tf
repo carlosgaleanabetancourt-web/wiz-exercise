@@ -3,7 +3,7 @@ data "http" "alb_controller_iam_policy" {
 }
 
 resource "aws_iam_policy" "alb_controller" {
-  name = "${var.project_name}-alb-controller"
+  name   = "${var.project_name}-alb-controller"
   policy = data.http.alb_controller_iam_policy.response_body
 }
 
@@ -31,44 +31,44 @@ resource "aws_iam_role" "alb_controller" {
 }
 
 resource "aws_iam_role_policy_attachment" "alb_controller" {
-  role = aws_iam_role.alb_controller.name
+  role       = aws_iam_role.alb_controller.name
   policy_arn = aws_iam_policy.alb_controller.arn
 }
 
 resource "helm_release" "alb_controller" {
-  name = "aws-load-balancer-controller"
+  name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
-  chart = "aws-load-balancer-controller"
-  version = "3.5.0"
-  namespace = "kube-system"
+  chart      = "aws-load-balancer-controller"
+  version    = "3.5.0"
+  namespace  = "kube-system"
 
   set {
-    name = "clusterName"
+    name  = "clusterName"
     value = module.eks.cluster_name
   }
 
   set {
-    name = "serviceAccount.create"
+    name  = "serviceAccount.create"
     value = "true"
   }
 
   set {
-    name = "serviceAccount.name"
+    name  = "serviceAccount.name"
     value = "aws-load-balancer-controller"
   }
 
   set {
-    name = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = aws_iam_role.alb_controller.arn
   }
 
   set {
-    name = "region"
+    name  = "region"
     value = var.aws_region
   }
 
   set {
-    name = "vpcId"
+    name  = "vpcId"
     value = module.vpc.vpc_id
   }
 
