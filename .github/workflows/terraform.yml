@@ -43,6 +43,11 @@ jobs:
       - name: Terraform Format
         run: terraform fmt -check -recursive
 
+      - name: Write tfvars
+        env:
+          TFVARS: ${{ secrets.TERRAFORM_TFVARS }}
+        run: printf '%s\n' "$TFVARS" > terraform.tfvars
+
       - name: Terraform Init
         run: terraform init
 
@@ -82,6 +87,11 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+
+      - name: Write tfvars
+        env:
+          TFVARS: ${{ secrets.TERRAFORM_TFVARS }}
+        run: printf '%s\n' "$TFVARS" > terraform.tfvars
 
       - name: Terraform Init
         run: terraform init
