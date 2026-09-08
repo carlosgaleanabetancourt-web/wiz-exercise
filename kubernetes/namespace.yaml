@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wiz-exercise
+  labels:
+    app: tasky
+    project: wiz-exercise
