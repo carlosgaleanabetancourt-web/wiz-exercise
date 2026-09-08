@@ -472,6 +472,32 @@ resource "aws_iam_role_policy" "github_actions_terraform" {
           "sts:GetCallerIdentity"
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "AllowTerraformState"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket",
+          "s3:GetBucketVersioning"
+        ]
+        Resource = [
+          "arn:aws:s3:::wiz-exercise-tfstate-${data.aws_caller_identity.current.account_id}",
+          "arn:aws:s3:::wiz-exercise-tfstate-${data.aws_caller_identity.current.account_id}/*"
+        ]
+      },
+      {
+        Sid    = "AllowTerraformLock"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:DescribeTable"
+        ]
+        Resource = "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/wiz-exercise-tflock"
       }
     ]
   })
