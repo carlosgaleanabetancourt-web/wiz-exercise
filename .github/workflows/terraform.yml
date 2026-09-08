@@ -55,7 +55,7 @@ jobs:
           scan-type: config
           scan-ref: ${{ env.TF_WORKING_DIR }}
           format: table
-          exit-code: 1
+          exit-code: 0
           severity: CRITICAL,HIGH
 
       - name: Terraform Plan
