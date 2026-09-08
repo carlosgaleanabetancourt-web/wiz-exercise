@@ -77,7 +77,8 @@ resource "aws_s3_bucket_public_access_block" "backup" {
 }
 
 resource "aws_s3_bucket_policy" "backup_public" {
-  bucket = aws_s3_bucket.backup.id
+  depends_on = [aws_s3_bucket_public_access_block.backup]
+  bucket     = aws_s3_bucket.backup.id
 
   policy = jsonencode({
     Version = "2012-10-17"
