@@ -19,10 +19,21 @@ module "eks" {
     resources        = ["secrets"]
   }
 
-  enable_cluster_creator_admin_permissions = true
+  enable_cluster_creator_admin_permissions = false
   enable_irsa                              = true
 
   access_entries = {
+    cluster_admin = {
+      principal_arn = var.cluster_admin_arn
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
     github_actions = {
       principal_arn = aws_iam_role.github_actions.arn
       policy_associations = {
