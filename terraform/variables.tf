@@ -27,6 +27,11 @@ variable "github_repo" {
   description = "GitHub repo in owner/repo format for OIDC trust"
 }
 
+variable "github_oidc_subject" {
+  type = string
+  description = "OIDC subject claim prefix from GitHub (Settings > Security > Code security > OIDC customization)"
+}
+
 variable "alarm_email" {
   type = string
   description = "Email for CloudWatch alarm notifications"
