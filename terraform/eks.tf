@@ -7,7 +7,7 @@ module "eks" {
 
   cluster_endpoint_public_access = true
 
-  cluster_endpoint_public_access_cidrs = var.admin_cidrs
+  cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
@@ -21,6 +21,20 @@ module "eks" {
 
   enable_cluster_creator_admin_permissions = true
   enable_irsa                              = true
+
+  access_entries = {
+    github_actions = {
+      principal_arn = aws_iam_role.github_actions.arn
+      policy_associations = {
+        cluster_admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
 
   eks_managed_node_groups = {
     default = {
