@@ -5,8 +5,8 @@ terraform {
     bucket         = "wiz-exercise-tfstate-947993335429"
     key            = "terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "wiz-exercise-tflock"
-    encrypt        = true
+    use_lockfile = true
+    encrypt      = true
   }
 
   required_providers {
