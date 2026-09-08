@@ -155,76 +155,323 @@ resource "aws_iam_role" "github_actions" {
   }
 }
 
-resource "aws_iam_role_policy" "github_actions_ecr" {
-  name = "${var.project_name}-github-actions-ecr"
+resource "aws_iam_role_policy" "github_actions_terraform" {
+  name = "${var.project_name}-github-actions-terraform"
   role = aws_iam_role.github_actions.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "AllowECRAuth"
+        Sid    = "AllowECR"
         Effect = "Allow"
         Action = [
-          "ecr:GetAuthorizationToken"
-        ]
-        Resource = "*"
-      },
-      {
-        Sid    = "AllowECRPush"
-        Effect = "Allow"
-        Action = [
+          "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
           "ecr:PutImage",
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload"
+          "ecr:CompleteLayerUpload",
+          "ecr:DescribeRepositories",
+          "ecr:ListTagsForResource",
+          "ecr:GetRepositoryPolicy",
+          "ecr:GetLifecyclePolicy",
+          "ecr:CreateRepository",
+          "ecr:DeleteRepository",
+          "ecr:PutImageTagMutability",
+          "ecr:PutImageScanningConfiguration",
+          "ecr:SetRepositoryPolicy",
+          "ecr:DeleteRepositoryPolicy",
+          "ecr:PutLifecyclePolicy",
+          "ecr:DeleteLifecyclePolicy",
+          "ecr:TagResource",
+          "ecr:UntagResource"
         ]
-        Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/${var.project_name}*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "github_actions_eks" {
-  name = "${var.project_name}-github-actions-eks"
-  role = aws_iam_role.github_actions.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
+        Resource = "*"
+      },
       {
-        Sid    = "AllowEKSAccess"
+        Sid    = "AllowEKS"
         Effect = "Allow"
         Action = [
-          "eks:DescribeCluster",
-          "eks:ListClusters"
+          "eks:*"
         ]
-        Resource = module.eks.cluster_arn
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "github_actions_secrets" {
-  name = "${var.project_name}-github-actions-secrets"
-  role = aws_iam_role.github_actions.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
+        Resource = "*"
+      },
       {
-        Sid    = "AllowSecretsRead"
+        Sid    = "AllowEC2"
         Effect = "Allow"
         Action = [
-          "secretsmanager:GetSecretValue"
+          "ec2:Describe*",
+          "ec2:Get*",
+          "ec2:CreateVpc",
+          "ec2:DeleteVpc",
+          "ec2:ModifyVpcAttribute",
+          "ec2:CreateSubnet",
+          "ec2:DeleteSubnet",
+          "ec2:CreateRouteTable",
+          "ec2:DeleteRouteTable",
+          "ec2:CreateRoute",
+          "ec2:DeleteRoute",
+          "ec2:AssociateRouteTable",
+          "ec2:DisassociateRouteTable",
+          "ec2:CreateInternetGateway",
+          "ec2:DeleteInternetGateway",
+          "ec2:AttachInternetGateway",
+          "ec2:DetachInternetGateway",
+          "ec2:CreateNatGateway",
+          "ec2:DeleteNatGateway",
+          "ec2:AllocateAddress",
+          "ec2:ReleaseAddress",
+          "ec2:CreateSecurityGroup",
+          "ec2:DeleteSecurityGroup",
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:AuthorizeSecurityGroupEgress",
+          "ec2:RevokeSecurityGroupEgress",
+          "ec2:CreateKeyPair",
+          "ec2:DeleteKeyPair",
+          "ec2:ImportKeyPair",
+          "ec2:RunInstances",
+          "ec2:TerminateInstances",
+          "ec2:CreateFlowLogs",
+          "ec2:DeleteFlowLogs",
+          "ec2:CreateTags",
+          "ec2:DeleteTags",
+          "ec2:EnableEbsEncryptionByDefault",
+          "ec2:GetEbsEncryptionByDefault",
+          "ec2:ModifyEbsDefaultKmsKeyId",
+          "ec2:ResetEbsDefaultKmsKeyId",
+          "ec2:CreateNetworkAclEntry",
+          "ec2:DeleteNetworkAclEntry",
+          "ec2:CreateLaunchTemplate",
+          "ec2:DeleteLaunchTemplate",
+          "ec2:CreateLaunchTemplateVersion",
+          "ec2:ModifySubnetAttribute"
         ]
-        Resource = [
-          aws_secretsmanager_secret.mongodb_credentials.arn,
-          aws_secretsmanager_secret.jwt_secret_key.arn
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowIAM"
+        Effect = "Allow"
+        Action = [
+          "iam:GetRole",
+          "iam:GetPolicy",
+          "iam:GetPolicyVersion",
+          "iam:GetRolePolicy",
+          "iam:GetInstanceProfile",
+          "iam:GetOpenIDConnectProvider",
+          "iam:ListRolePolicies",
+          "iam:ListAttachedRolePolicies",
+          "iam:ListInstanceProfilesForRole",
+          "iam:ListPolicyVersions",
+          "iam:CreateRole",
+          "iam:DeleteRole",
+          "iam:CreatePolicy",
+          "iam:DeletePolicy",
+          "iam:PutRolePolicy",
+          "iam:DeleteRolePolicy",
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:CreateInstanceProfile",
+          "iam:DeleteInstanceProfile",
+          "iam:AddRoleToInstanceProfile",
+          "iam:RemoveRoleFromInstanceProfile",
+          "iam:CreateOpenIDConnectProvider",
+          "iam:DeleteOpenIDConnectProvider",
+          "iam:UpdateOpenIDConnectProviderThumbprint",
+          "iam:TagRole",
+          "iam:UntagRole",
+          "iam:TagPolicy",
+          "iam:UntagPolicy",
+          "iam:TagInstanceProfile",
+          "iam:TagOpenIDConnectProvider",
+          "iam:PassRole",
+          "iam:CreateServiceLinkedRole",
+          "iam:ListOpenIDConnectProviders"
         ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowS3"
+        Effect = "Allow"
+        Action = [
+          "s3:CreateBucket",
+          "s3:DeleteBucket",
+          "s3:GetBucketPolicy",
+          "s3:PutBucketPolicy",
+          "s3:DeleteBucketPolicy",
+          "s3:GetBucketAcl",
+          "s3:PutBucketAcl",
+          "s3:GetBucketVersioning",
+          "s3:PutBucketVersioning",
+          "s3:GetBucketEncryption",
+          "s3:PutBucketEncryption",
+          "s3:DeleteBucketEncryption",
+          "s3:GetBucketLogging",
+          "s3:PutBucketLogging",
+          "s3:GetBucketPublicAccessBlock",
+          "s3:PutBucketPublicAccessBlock",
+          "s3:GetLifecycleConfiguration",
+          "s3:PutLifecycleConfiguration",
+          "s3:GetBucketTagging",
+          "s3:PutBucketTagging",
+          "s3:ListBucket",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:GetBucketLocation",
+          "s3:GetBucketObjectLockConfiguration",
+          "s3:GetAccelerateConfiguration",
+          "s3:GetBucketRequestPayment",
+          "s3:GetBucketCORS",
+          "s3:GetBucketWebsite",
+          "s3:GetReplicationConfiguration",
+          "s3:GetAnalyticsConfiguration",
+          "s3:GetInventoryConfiguration",
+          "s3:GetMetricsConfiguration",
+          "s3:GetIntelligentTieringConfiguration",
+          "s3:GetBucketOwnershipControls",
+          "s3:GetObjectVersionForReplication"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowKMS"
+        Effect = "Allow"
+        Action = [
+          "kms:CreateKey",
+          "kms:DescribeKey",
+          "kms:GetKeyPolicy",
+          "kms:GetKeyRotationStatus",
+          "kms:ListResourceTags",
+          "kms:CreateAlias",
+          "kms:DeleteAlias",
+          "kms:EnableKeyRotation",
+          "kms:ScheduleKeyDeletion",
+          "kms:TagResource",
+          "kms:UntagResource",
+          "kms:PutKeyPolicy",
+          "kms:ListAliases",
+          "kms:CreateGrant",
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowCloudWatch"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:DeleteLogGroup",
+          "logs:DescribeLogGroups",
+          "logs:PutRetentionPolicy",
+          "logs:DeleteRetentionPolicy",
+          "logs:TagLogGroup",
+          "logs:UntagLogGroup",
+          "logs:ListTagsLogGroup",
+          "logs:ListTagsForResource",
+          "logs:TagResource",
+          "cloudwatch:PutMetricAlarm",
+          "cloudwatch:DeleteAlarms",
+          "cloudwatch:DescribeAlarms",
+          "cloudwatch:ListTagsForResource",
+          "cloudwatch:TagResource",
+          "cloudwatch:UntagResource"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowSNS"
+        Effect = "Allow"
+        Action = [
+          "sns:CreateTopic",
+          "sns:DeleteTopic",
+          "sns:GetTopicAttributes",
+          "sns:SetTopicAttributes",
+          "sns:Subscribe",
+          "sns:Unsubscribe",
+          "sns:ListTagsForResource",
+          "sns:TagResource",
+          "sns:UntagResource",
+          "sns:GetSubscriptionAttributes"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowConfig"
+        Effect = "Allow"
+        Action = [
+          "config:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowGuardDuty"
+        Effect = "Allow"
+        Action = [
+          "guardduty:CreateDetector",
+          "guardduty:DeleteDetector",
+          "guardduty:GetDetector",
+          "guardduty:UpdateDetector",
+          "guardduty:ListDetectors",
+          "guardduty:TagResource",
+          "guardduty:ListTagsForResource"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowSecretsManager"
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:CreateSecret",
+          "secretsmanager:DeleteSecret",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:GetResourcePolicy",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:UpdateSecret",
+          "secretsmanager:TagResource",
+          "secretsmanager:UntagResource",
+          "secretsmanager:ListSecretVersionIds"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowELB"
+        Effect = "Allow"
+        Action = [
+          "elasticloadbalancing:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowAutoScaling"
+        Effect = "Allow"
+        Action = [
+          "autoscaling:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowSSM"
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowSTS"
+        Effect = "Allow"
+        Action = [
+          "sts:GetCallerIdentity"
+        ]
+        Resource = "*"
       }
     ]
   })
