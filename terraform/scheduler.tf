@@ -135,7 +135,7 @@ resource "aws_scheduler_schedule" "start_eks_nodes" {
       ClusterName   = module.eks.cluster_name
       NodegroupName = split(":", module.eks.eks_managed_node_groups["default"].node_group_id)[1]
       ScalingConfig = {
-        MinSize     = 2
+        MinSize     = 0
         DesiredSize = 2
       }
     })

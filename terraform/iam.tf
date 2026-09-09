@@ -504,7 +504,12 @@ resource "aws_iam_role_policy" "github_actions_terraform" {
           "wafv2:GetWebACLForResource",
           "wafv2:PutLoggingConfiguration",
           "wafv2:GetLoggingConfiguration",
-          "wafv2:DeleteLoggingConfiguration"
+          "wafv2:DeleteLoggingConfiguration",
+          "wafv2:CreateIPSet",
+          "wafv2:DeleteIPSet",
+          "wafv2:GetIPSet",
+          "wafv2:UpdateIPSet",
+          "wafv2:ListIPSets"
         ]
         Resource = "*"
       },
