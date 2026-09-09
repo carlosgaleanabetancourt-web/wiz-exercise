@@ -59,6 +59,28 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "backup_access_log
   }
 }
 
+resource "aws_s3_bucket_policy" "backup_access_logs" {
+  bucket = aws_s3_bucket.backup_access_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "S3ServerAccessLogsPolicy"
+        Effect    = "Allow"
+        Principal = { Service = "logging.s3.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.backup_access_logs.arn}/access-logs/*"
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = aws_s3_bucket.backup.arn
+          }
+        }
+      }
+    ]
+  })
+}
+
 resource "aws_s3_bucket_logging" "backup" {
   bucket = aws_s3_bucket.backup.id
 
