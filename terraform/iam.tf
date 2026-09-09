@@ -237,6 +237,7 @@ resource "aws_iam_role_policy" "github_actions_terraform" {
           "ec2:TerminateInstances",
           "ec2:StopInstances",
           "ec2:StartInstances",
+          "ec2:ModifyInstanceAttribute",
           "ec2:CreateFlowLogs",
           "ec2:DeleteFlowLogs",
           "ec2:CreateTags",
