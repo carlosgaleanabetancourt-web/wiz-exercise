@@ -104,3 +104,38 @@ resource "aws_wafv2_web_acl" "alb" {
     Project = var.project_name
   }
 }
+
+resource "aws_cloudwatch_log_group" "waf" {
+  name              = "aws-waf-logs-${var.project_name}"
+  retention_in_days = 30
+
+  tags = {
+    Project = var.project_name
+  }
+}
+
+resource "aws_wafv2_web_acl_logging_configuration" "alb" {
+  log_destination_configs = [aws_cloudwatch_log_group.waf.arn]
+  resource_arn            = aws_wafv2_web_acl.alb.arn
+
+  logging_filter {
+    default_behavior = "DROP"
+
+    filter {
+      behavior    = "KEEP"
+      requirement = "MEETS_ANY"
+
+      condition {
+        action_condition {
+          action = "BLOCK"
+        }
+      }
+
+      condition {
+        action_condition {
+          action = "COUNT"
+        }
+      }
+    }
+  }
+}
