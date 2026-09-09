@@ -42,3 +42,9 @@ variable "alarm_email" {
   description = "Email for CloudWatch alarm notifications"
   default     = ""
 }
+
+variable "schedule_timezone" {
+  type        = string
+  description = "Timezone for the night stop / morning start schedules"
+  default     = "America/Mexico_City"
+}
