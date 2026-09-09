@@ -497,7 +497,10 @@ resource "aws_iam_role_policy" "github_actions_terraform" {
           "wafv2:UntagResource",
           "wafv2:AssociateWebACL",
           "wafv2:DisassociateWebACL",
-          "wafv2:GetWebACLForResource"
+          "wafv2:GetWebACLForResource",
+          "wafv2:PutLoggingConfiguration",
+          "wafv2:GetLoggingConfiguration",
+          "wafv2:DeleteLoggingConfiguration"
         ]
         Resource = "*"
       },

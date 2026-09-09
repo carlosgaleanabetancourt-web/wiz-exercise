@@ -29,6 +29,7 @@ func main() {
 
 	router.POST("/signup", controller.SignUp)
 	router.POST("/login", controller.Login)
+	router.GET("/logout", controller.Logout)
 	router.GET("/todo", controller.Todo)
 
 	router.Run(":8080" )
