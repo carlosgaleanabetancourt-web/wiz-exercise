@@ -19,6 +19,13 @@ spec:
       containers:
         - name: tasky
           image: ${ECR_IMAGE}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: 8080
               protocol: TCP

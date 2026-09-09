@@ -12,6 +12,15 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
+  cluster_addons = {
+    vpc-cni = {
+      most_recent = true
+      configuration_values = jsonencode({
+        enableNetworkPolicy = "true"
+      })
+    }
+  }
+
   cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   cluster_encryption_config = {
