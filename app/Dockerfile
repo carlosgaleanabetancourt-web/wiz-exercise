@@ -9,11 +9,13 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /go/src/tasky/tasky
 
 FROM alpine:3.21 AS release
 
+RUN adduser -D -u 1000 appuser
 WORKDIR /app
-COPY --from=build  /go/src/tasky/tasky .
-COPY --from=build  /go/src/tasky/assets ./assets
-COPY wizexercise.txt .
+COPY --from=build --chown=appuser:appuser /go/src/tasky/tasky .
+COPY --from=build --chown=appuser:appuser /go/src/tasky/assets ./assets
+COPY --chown=appuser:appuser wizexercise.txt .
 EXPOSE 8080
+USER 1000
 ENTRYPOINT ["/app/tasky"]
 
 

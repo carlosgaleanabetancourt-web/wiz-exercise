@@ -89,12 +89,25 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
 
-      - name: Apply namespace, RBAC, and service
+      - name: Resolve WAF ACL ARN
+        id: waf
+        run: |
+          WAF_ACL_ARN=$(aws wafv2 list-web-acls --scope REGIONAL --region $AWS_REGION \
+            --query "WebACLs[?Name=='wiz-exercise-waf'].ARN | [0]" --output text)
+          echo "acl_arn=$WAF_ACL_ARN" >> $GITHUB_OUTPUT
+
+      - name: Apply namespace, RBAC, service, and network policies
         run: |
           kubectl apply -f kubernetes/namespace.yaml
           kubectl apply -f kubernetes/rbac.yaml
           kubectl apply -f kubernetes/service.yaml
-          kubectl apply -f kubernetes/ingress.yaml
+          kubectl apply -f kubernetes/network-policy.yaml
+
+      - name: Apply ingress with WAF annotation
+        env:
+          WAF_ACL_ARN: ${{ steps.waf.outputs.acl_arn }}
+        run: |
+          envsubst '${WAF_ACL_ARN}' < kubernetes/ingress.yaml | kubectl apply -f -
 
       - name: Sync secrets from AWS Secrets Manager
         env:
