@@ -162,6 +162,18 @@ func Login(c * gin.Context){
 	c.JSON(http.StatusOK, gin.H{"msg": "login successful"})
 }
 
+func Logout(c *gin.Context) {
+	for _, name := range []string{"token", "userID", "username"} {
+		http.SetCookie(c.Writer, &http.Cookie{
+			Name:   name,
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+	}
+	c.Redirect(http.StatusFound, "/")
+}
+
 func Todo(c * gin.Context) {
 	session := auth.ValidateSession(c)
 	if session {
