@@ -1,3 +1,20 @@
+resource "aws_wafv2_ip_set" "blocklist" {
+  name               = "${var.project_name}-blocklist"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+
+  addresses = [
+    "136.117.5.225/32",
+    "140.245.124.165/32",
+    "140.245.97.206/32",
+    "140.245.112.8/32",
+  ]
+
+  tags = {
+    Project = var.project_name
+  }
+}
+
 resource "aws_wafv2_web_acl" "alb" {
   name  = "${var.project_name}-waf"
   scope = "REGIONAL"
@@ -7,8 +24,51 @@ resource "aws_wafv2_web_acl" "alb" {
   }
 
   rule {
-    name     = "aws-common-rules"
+    name     = "block-malicious-ips"
+    priority = 0
+
+    action {
+      block {}
+    }
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.blocklist.arn
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-ip-blocklist"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "aws-ip-reputation"
     priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAmazonIpReputationList"
+        vendor_name = "AWS"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-ip-reputation"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "aws-common-rules"
+    priority = 2
 
     override_action {
       none {}
@@ -30,7 +90,7 @@ resource "aws_wafv2_web_acl" "alb" {
 
   rule {
     name     = "aws-known-bad-inputs"
-    priority = 2
+    priority = 3
 
     override_action {
       none {}
@@ -52,7 +112,7 @@ resource "aws_wafv2_web_acl" "alb" {
 
   rule {
     name     = "aws-sqli-rules"
-    priority = 3
+    priority = 4
 
     override_action {
       none {}
@@ -74,7 +134,7 @@ resource "aws_wafv2_web_acl" "alb" {
 
   rule {
     name     = "rate-limit"
-    priority = 4
+    priority = 5
 
     action {
       block {}
