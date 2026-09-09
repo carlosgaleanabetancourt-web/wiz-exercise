@@ -26,7 +26,7 @@ Internet
                 └─────────────────────────────────────────────┘
 ```
 
-**Frontend:** Tasky — a Go/Gin todo application running on EKS, exposed via ALB with WAFv2 protection.
+**Frontend:** Tasky — a Go/Gin todo application with JWT cookie-based auth (login/signup/logout), running on EKS, exposed via ALB with WAFv2 protection.
 
 **Backend:** MongoDB 3.6.8 on an Ubuntu 20.04 EC2 instance in a public subnet with daily automated backups to S3.
 
@@ -55,8 +55,8 @@ terraform/
   eks.tf                   # EKS cluster, VPC CNI with network policy controller
   mongodb.tf               # EC2 instance, user-data bootstrap
   networking.tf            # VPC, subnets, NAT gateways, flow logs
-  waf.tf                   # WAFv2 WebACL (OWASP rules + rate limiting)
-  dashboard.tf             # CloudWatch security dashboard (16 widgets)
+  waf.tf                   # WAFv2 WebACL (OWASP rules + rate limiting + logging)
+  dashboard.tf             # CloudWatch security dashboard (18 widgets)
   scheduler.tf             # EventBridge cost-savings schedules
   iam.tf                   # IAM roles (MongoDB, GitHub Actions, ALB controller, scheduler)
   security-groups.tf       # MongoDB SG (SSH 0.0.0.0/0, MongoDB VPC-only)
@@ -96,7 +96,7 @@ These are required by the exercise specification:
 
 ### Preventative
 
-- **WAFv2 on ALB** — AWS managed rule groups: CommonRuleSet, KnownBadInputsRuleSet, SQLiRuleSet, plus IP-based rate limiting (2000 req/5min)
+- **WAFv2 on ALB** — AWS managed rule groups: CommonRuleSet, KnownBadInputsRuleSet, SQLiRuleSet, plus IP-based rate limiting (2000 req/5min). Logs BLOCK and COUNT actions to CloudWatch Logs
 - **K8s Network Policies** — Default-deny-all with explicit allow: ingress on 8080, egress to MongoDB (27017), DNS, and HTTPS
 - **Pod Security Standards** — Namespace labels: baseline enforce, restricted warn/audit
 - **Container hardening** — Non-root user (UID 1000), all capabilities dropped, privilege escalation disabled
@@ -113,7 +113,8 @@ These are required by the exercise specification:
 - **EKS audit logging** — All 5 log types (api, audit, authenticator, controllerManager, scheduler)
 - **VPC Flow Logs** — All traffic captured to CloudWatch Logs (30-day retention)
 - **CloudWatch Alarms** — MongoDB CPU/status, EKS node CPU/memory/count
-- **CloudWatch Dashboard** — `wiz-exercise-security`: WAF metrics, ALB performance, pod health, infrastructure status (16 widgets)
+- **WAF Logging** — BLOCK and COUNT actions logged to CloudWatch Logs (`aws-waf-logs-wiz-exercise`, 30-day retention)
+- **CloudWatch Dashboard** — `wiz-exercise-security`: WAF metrics + log queries, ALB performance, pod health, infrastructure status (18 widgets)
 
 ### Cost Optimization
 
