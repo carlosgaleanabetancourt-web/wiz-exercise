@@ -56,7 +56,7 @@ resource "aws_scheduler_schedule" "stop_mongodb" {
     mode = "OFF"
   }
 
-  schedule_expression          = "cron(0 22 * * ? *)"
+  schedule_expression          = "cron(10 6 * * ? *)"
   schedule_expression_timezone = var.schedule_timezone
 
   target {
@@ -77,7 +77,7 @@ resource "aws_scheduler_schedule" "start_mongodb" {
     mode = "OFF"
   }
 
-  schedule_expression          = "cron(0 8 * * ? *)"
+  schedule_expression          = "cron(25 6 * * ? *)"
   schedule_expression_timezone = var.schedule_timezone
 
   target {
@@ -98,7 +98,7 @@ resource "aws_scheduler_schedule" "stop_eks_nodes" {
     mode = "OFF"
   }
 
-  schedule_expression          = "cron(0 22 * * ? *)"
+  schedule_expression          = "cron(10 6 * * ? *)"
   schedule_expression_timezone = var.schedule_timezone
 
   target {
@@ -107,7 +107,7 @@ resource "aws_scheduler_schedule" "stop_eks_nodes" {
 
     input = jsonencode({
       ClusterName   = module.eks.cluster_name
-      NodegroupName = keys(module.eks.eks_managed_node_groups)[0]
+      NodegroupName = split(":", module.eks.eks_managed_node_groups["default"].node_group_id)[1]
       ScalingConfig = {
         MinSize     = 0
         DesiredSize = 0
@@ -124,7 +124,7 @@ resource "aws_scheduler_schedule" "start_eks_nodes" {
     mode = "OFF"
   }
 
-  schedule_expression          = "cron(0 8 * * ? *)"
+  schedule_expression          = "cron(25 6 * * ? *)"
   schedule_expression_timezone = var.schedule_timezone
 
   target {
@@ -133,7 +133,7 @@ resource "aws_scheduler_schedule" "start_eks_nodes" {
 
     input = jsonencode({
       ClusterName   = module.eks.cluster_name
-      NodegroupName = keys(module.eks.eks_managed_node_groups)[0]
+      NodegroupName = split(":", module.eks.eks_managed_node_groups["default"].node_group_id)[1]
       ScalingConfig = {
         MinSize     = 2
         DesiredSize = 2
