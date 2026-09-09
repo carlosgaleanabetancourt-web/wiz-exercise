@@ -56,7 +56,7 @@ terraform/
   mongodb.tf               # EC2 instance, user-data bootstrap
   networking.tf            # VPC, subnets, NAT gateways, flow logs
   waf.tf                   # WAFv2 WebACL (OWASP rules + rate limiting + logging)
-  dashboard.tf             # CloudWatch security dashboard (18 widgets)
+  dashboard.tf             # CloudWatch security dashboard (17 widgets)
   scheduler.tf             # EventBridge cost-savings schedules
   iam.tf                   # IAM roles (MongoDB, GitHub Actions, ALB controller, scheduler)
   security-groups.tf       # MongoDB SG (SSH 0.0.0.0/0, MongoDB VPC-only)
@@ -114,7 +114,7 @@ These are required by the exercise specification:
 - **VPC Flow Logs** — All traffic captured to CloudWatch Logs (30-day retention)
 - **CloudWatch Alarms** — MongoDB CPU/status, EKS node CPU/memory/count
 - **WAF Logging** — BLOCK and COUNT actions logged to CloudWatch Logs (`aws-waf-logs-wiz-exercise`, 30-day retention)
-- **CloudWatch Dashboard** — `wiz-exercise-security`: WAF metrics + log queries, ALB performance, pod health, infrastructure status (18 widgets)
+- **CloudWatch Dashboard** — `wiz-exercise-security`: WAF metrics + log queries, ALB performance, pod health, infrastructure status (17 widgets)
 
 ### Cost Optimization
 
