@@ -50,6 +50,8 @@ resource "aws_instance" "mongodb" {
               apt-get update -y
               apt-get install -y mongodb awscli jq
 
+              timedatectl set-timezone ${var.schedule_timezone}
+
               systemctl enable mongodb
               systemctl start mongodb
 
