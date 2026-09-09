@@ -52,7 +52,7 @@ signup.addEventListener("click", () => {
             let body = await response.json();
             if(body.error) {
                 console.error(body.error);
-                document.getElementById('error').innerHTML=body.error;
+                document.getElementById('signup-error').innerHTML=body.error;
             }
         }
 

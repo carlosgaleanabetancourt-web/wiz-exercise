@@ -5,16 +5,15 @@ import (
 )
 
 type Todo struct {
-	ID     primitive.ObjectID `bson:"_id"`
-	Name   string             `json:"name"		bson:"name"`
-	Status string             `json:"status"	bson:"status"`
-	UserID string             `json:"user_id"	bson:"user_id"`
+	ID     primitive.ObjectID `bson:"_id" json:"ID"`
+	Name   string             `bson:"name" json:"name"`
+	Status string             `bson:"status" json:"status"`
+	UserID string             `bson:"userid" json:"user_id"`
 }
 
 type User struct {
-	ID     primitive.ObjectID 	`bson:"_id"`
-	Name   *string             	`json:"username"	bson:"username"`
-	Email  *string             	`json:"email"		bson:"email"`
-	Password *string             `json:"password"	bson:"password"`
+	ID       primitive.ObjectID `bson:"_id"`
+	Name     *string            `bson:"name" json:"username"`
+	Email    *string            `bson:"email" json:"email"`
+	Password *string            `bson:"password" json:"password"`
 }
-

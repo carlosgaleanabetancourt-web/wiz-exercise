@@ -41,7 +41,7 @@ func ClearAll(c *gin.Context) {
 	
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	userid := c.Param("userid")
-	_, err := todoCollection.DeleteMany(ctx, bson.M{"user_id": userid})
+	_, err := todoCollection.DeleteMany(ctx, bson.M{"userid": userid})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -60,7 +60,7 @@ func GetTodos(c *gin.Context) {
 	} 
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	userid := c.Param("userid")
-	findResult, err := todoCollection.Find(ctx, bson.M{"user_id": userid})
+	findResult, err := todoCollection.Find(ctx, bson.M{"userid": userid})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"FindError": err.Error()})
 		return
@@ -91,7 +91,7 @@ func DeleteTodo(c *gin.Context) {
 	id := c.Param("id")
 	userid := c.Param("userid")
 	objId, _ := primitive.ObjectIDFromHex(id)
-	deleteResult, err := todoCollection.DeleteOne(ctx, bson.M{"_id": objId, "user_id": userid})
+	deleteResult, err := todoCollection.DeleteOne(ctx, bson.M{"_id": objId, "userid": userid})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -120,7 +120,7 @@ func UpdateTodo(c *gin.Context) {
 		return
 	}
 
-	_, err := todoCollection.UpdateOne(ctx, bson.M{"_id": newTodo.ID, "user_id" : newTodo.UserID}, bson.M{"$set": newTodo})
+	_, err := todoCollection.UpdateOne(ctx, bson.M{"_id": newTodo.ID, "userid": newTodo.UserID}, bson.M{"$set": newTodo})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		fmt.Println(err.Error())
