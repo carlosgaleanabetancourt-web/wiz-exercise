@@ -76,9 +76,35 @@ resource "aws_cloudwatch_dashboard" "main" {
         }
       },
       {
-        type   = "text"
+        type   = "log"
         x      = 0
         y      = 7
+        width  = 12
+        height = 6
+        properties = {
+          title  = "WAF Blocked Requests (logs)"
+          region = var.aws_region
+          query  = "SOURCE '${aws_cloudwatch_log_group.waf.name}' | fields @timestamp, httpRequest.clientIp as srcIP, httpRequest.uri as uri, httpRequest.httpMethod as method, terminatingRuleId as rule, action | filter action = 'BLOCK' | sort @timestamp desc | limit 50"
+          view   = "table"
+        }
+      },
+      {
+        type   = "log"
+        x      = 12
+        y      = 7
+        width  = 12
+        height = 6
+        properties = {
+          title  = "WAF Top Blocked IPs"
+          region = var.aws_region
+          query  = "SOURCE '${aws_cloudwatch_log_group.waf.name}' | filter action = 'BLOCK' | stats count(*) as blocks by httpRequest.clientIp as srcIP | sort blocks desc | limit 20"
+          view   = "table"
+        }
+      },
+      {
+        type   = "text"
+        x      = 0
+        y      = 13
         width  = 24
         height = 1
         properties = {
@@ -88,7 +114,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 0
-        y      = 8
+        y      = 14
         width  = 6
         height = 6
         properties = {
@@ -105,7 +131,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 6
-        y      = 8
+        y      = 14
         width  = 6
         height = 6
         properties = {
@@ -128,7 +154,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 12
-        y      = 8
+        y      = 14
         width  = 6
         height = 6
         properties = {
@@ -148,7 +174,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 18
-        y      = 8
+        y      = 14
         width  = 6
         height = 6
         properties = {
@@ -166,7 +192,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "text"
         x      = 0
-        y      = 14
+        y      = 20
         width  = 24
         height = 1
         properties = {
@@ -176,7 +202,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 0
-        y      = 15
+        y      = 21
         width  = 6
         height = 6
         properties = {
@@ -199,7 +225,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 6
-        y      = 15
+        y      = 21
         width  = 6
         height = 6
         properties = {
@@ -222,7 +248,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 12
-        y      = 15
+        y      = 21
         width  = 6
         height = 6
         properties = {
@@ -240,7 +266,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 18
-        y      = 15
+        y      = 21
         width  = 6
         height = 6
         properties = {
@@ -257,7 +283,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "text"
         x      = 0
-        y      = 21
+        y      = 27
         width  = 24
         height = 1
         properties = {
@@ -267,7 +293,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 0
-        y      = 22
+        y      = 28
         width  = 6
         height = 6
         properties = {
@@ -290,7 +316,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 6
-        y      = 22
+        y      = 28
         width  = 6
         height = 6
         properties = {
@@ -308,7 +334,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 12
-        y      = 22
+        y      = 28
         width  = 6
         height = 6
         properties = {
@@ -336,7 +362,7 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type   = "metric"
         x      = 18
-        y      = 22
+        y      = 28
         width  = 6
         height = 6
         properties = {
