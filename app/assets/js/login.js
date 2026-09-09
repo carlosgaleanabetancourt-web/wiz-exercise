@@ -45,13 +45,19 @@ signup.addEventListener("click", () => {
             'password' : document.getElementById("signuppass").value
         })
     })
-    .then(response => {
+    .then(async response => {
         if(response.status == 200) {
             window.location.href = "/todo";
         } else {
-            var str = JSON.stringify(response.json());
-            document.write(str)
+            let body = await response.json();
+            if(body.error) {
+                console.error(body.error);
+                document.getElementById('error').innerHTML=body.error;
+            }
         }
-        
+
+    })
+    .catch(error => {
+        console.error(error);
     })
 });
