@@ -89,22 +89,13 @@ resource "aws_instance" "mongodb" {
               DATE=$(date +%Y-%m-%d)
               BACKUP_DIR="/opt/mongodb-backups/$${DATE}"
               REGION="${var.aws_region}"
-              PROJECT="${var.project_name}"
-
-              BUCKET=$(aws s3api list-buckets \
-                --query "Buckets[?starts_with(Name, '$${PROJECT}-backup-') && !contains(Name, 'logs')].Name | [0]" \
-                --output text)
-
-              if [ "$BUCKET" = "None" ] || [ -z "$BUCKET" ]; then
-                echo "ERROR: backup bucket not found" >&2
-                exit 1
-              fi
+              BUCKET="${aws_s3_bucket.backup.id}"
 
               mkdir -p "$${BACKUP_DIR}"
 
               CREDS=$(aws secretsmanager get-secret-value \
                 --region "$REGION" \
-                --secret-id "$${PROJECT}/mongodb-credentials" \
+                --secret-id "${var.project_name}/mongodb-credentials" \
                 --query SecretString \
                 --output text)
 
@@ -131,6 +122,7 @@ resource "aws_instance" "mongodb" {
               echo "0 21 * * * root /opt/mongodb-backup.sh >> /var/log/mongodb-backup.log 2>&1" > /etc/cron.d/mongodb-backup
               chmod 644 /etc/cron.d/mongodb-backup
 
+              sleep 10
               /opt/mongodb-backup.sh >> /var/log/mongodb-backup.log 2>&1 || true
               EOF
 
