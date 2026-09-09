@@ -120,6 +120,17 @@ These are required by the exercise specification:
 
 EventBridge Scheduler stops MongoDB EC2 and scales EKS nodes to 0 at 10 PM CST, restarts at 8 AM CST. Saves ~$2/day (~20% reduction) while preserving all data.
 
+**Daily cycle (America/Mexico_City timezone):**
+
+| Time (CST) | Event |
+|------------|-------|
+| 8:00 AM | EventBridge starts EC2 and scales EKS nodes to 2 |
+| — | MongoDB auto-starts via systemd, app becomes available |
+| 9:00 PM | Cron runs `mongodump` → S3 backup |
+| 10:00 PM | EventBridge stops EC2 and scales EKS nodes to 0 |
+
+EBS data persists across stop/start cycles. MongoDB, the cron job, and the backup script all survive reboots automatically.
+
 ## CI/CD Pipelines
 
 | Pipeline | Trigger | Steps |
