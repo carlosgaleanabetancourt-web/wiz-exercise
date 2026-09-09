@@ -68,3 +68,8 @@ output "waf_acl_arn" {
   description = "WAFv2 Web ACL ARN for ALB association"
   value       = aws_wafv2_web_acl.alb.arn
 }
+
+output "cloudwatch_dashboard_name" {
+  description = "CloudWatch security dashboard name"
+  value       = aws_cloudwatch_dashboard.main.dashboard_name
+}

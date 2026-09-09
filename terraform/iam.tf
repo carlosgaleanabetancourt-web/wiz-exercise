@@ -473,6 +473,17 @@ resource "aws_iam_role_policy" "github_actions_terraform" {
         Resource = "*"
       },
       {
+        Sid    = "AllowCloudWatchDashboards"
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutDashboard",
+          "cloudwatch:GetDashboard",
+          "cloudwatch:DeleteDashboards",
+          "cloudwatch:ListDashboards"
+        ]
+        Resource = "*"
+      },
+      {
         Sid    = "AllowWAFv2"
         Effect = "Allow"
         Action = [
