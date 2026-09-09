@@ -130,6 +130,8 @@ resource "aws_instance" "mongodb" {
 
               echo "0 21 * * * root /opt/mongodb-backup.sh >> /var/log/mongodb-backup.log 2>&1" > /etc/cron.d/mongodb-backup
               chmod 644 /etc/cron.d/mongodb-backup
+
+              /opt/mongodb-backup.sh >> /var/log/mongodb-backup.log 2>&1 || true
               EOF
 
   tags = {
