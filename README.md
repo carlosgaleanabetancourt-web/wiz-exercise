@@ -36,7 +36,7 @@ Internet
 .github/workflows/
   terraform.yml            # IaC pipeline: fmt, validate, Trivy scan, plan, apply
   build-and-deploy.yaml    # App pipeline: Docker build, Trivy scan, ECR push, EKS deploy
-  security.yaml            # tfsec static analysis on PRs
+  security.yaml            # Checkov IaC, Trivy filesystem, Trivy secret scanning
 
 app/
   Dockerfile               # Multi-stage build, non-root user (UID 1000)
@@ -101,7 +101,8 @@ These are required by the exercise specification:
 - **Pod Security Standards** — Namespace labels: baseline enforce, restricted warn/audit
 - **Container hardening** — Non-root user (UID 1000), all capabilities dropped, privilege escalation disabled
 - **Trivy** — Blocks container images with CRITICAL/HIGH CVEs in CI
-- **tfsec** — Scans Terraform for misconfigurations on PRs
+- **Checkov** — Scans Terraform for misconfigurations on PRs
+- **ECR Enhanced Scanning** — Amazon Inspector continuously re-scans container images for new CVEs after push (not just at push time)
 - **Branch protection** — PRs required, CI must pass before merge
 - **KMS encryption** — EKS secrets at rest, EBS default encryption, SNS topic encryption
 - **OIDC federation** — GitHub Actions authenticates via OIDC, zero static credentials
@@ -109,6 +110,7 @@ These are required by the exercise specification:
 ### Detective
 
 - **AWS Config** — 5 managed rules: restricted-ssh, s3-public-read-prohibited, s3-bucket-server-side-encryption-enabled, s3-bucket-versioning-enabled, restricted-common-ports
+- **Amazon Inspector** — Continuous vulnerability scanning for ECR container images; detects newly published CVEs in existing images
 - **GuardDuty** — 7 features: CloudTrail, DNS logs, VPC Flow Logs, S3 data events, EKS audit logs, EBS malware protection, RDS login activity
 - **EKS audit logging** — All 5 log types (api, audit, authenticator, controllerManager, scheduler)
 - **VPC Flow Logs** — All traffic captured to CloudWatch Logs (30-day retention)
@@ -137,7 +139,7 @@ EBS data persists across stop/start cycles. MongoDB, the cron job, and the backu
 |----------|---------|-------|
 | `terraform.yml` | Push/PR to `terraform/**` | Format check, init, validate, Trivy IaC scan, plan, apply (main only) |
 | `build-and-deploy.yaml` | Push/PR to `app/**`, `kubernetes/**` | Docker build, Trivy container scan, ECR push, K8s deploy with network policies and WAF |
-| `security.yaml` | PR to `terraform/**` | tfsec static analysis |
+| `security.yaml` | PR/push to `main` | Checkov IaC scan, Trivy filesystem scan, Trivy secret scan |
 
 All pipelines use GitHub OIDC federation with AWS (no static credentials).
 
