@@ -187,7 +187,23 @@ resource "aws_iam_role_policy" "github_actions_terraform" {
           "ecr:PutLifecyclePolicy",
           "ecr:DeleteLifecyclePolicy",
           "ecr:TagResource",
-          "ecr:UntagResource"
+          "ecr:UntagResource",
+          "ecr:GetRegistryScanningConfiguration",
+          "ecr:PutRegistryScanningConfiguration",
+          "ecr:BatchGetRepositoryScanningConfiguration"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowInspector"
+        Effect = "Allow"
+        Action = [
+          "inspector2:Enable",
+          "inspector2:Disable",
+          "inspector2:GetStatus",
+          "inspector2:BatchGetAccountStatus",
+          "inspector2:ListFindings",
+          "inspector2:ListAccountPermissions"
         ]
         Resource = "*"
       },
