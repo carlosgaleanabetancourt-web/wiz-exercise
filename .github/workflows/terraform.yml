@@ -104,9 +104,11 @@ jobs:
         run: terraform apply -auto-approve tfplan
 
       - name: Update kubeconfig
+        working-directory: .
         run: aws eks update-kubeconfig --name wiz-exercise-eks --region $AWS_REGION
 
       - name: Sync K8s secrets from Secrets Manager
+        working-directory: .
         env:
           PROJECT_NAME: wiz-exercise
         run: |
@@ -114,4 +116,5 @@ jobs:
           ./scripts/create-k8s-secrets.sh
 
       - name: Restart pods to pick up new secrets
+        working-directory: .
         run: kubectl rollout restart deployment/tasky -n wiz-exercise || true
