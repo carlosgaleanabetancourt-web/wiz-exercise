@@ -124,27 +124,38 @@ resource "aws_instance" "mongodb" {
               echo "0 21 * * * root /opt/mongodb-backup.sh >> /var/log/mongodb-backup.log 2>&1" > /etc/cron.d/mongodb-backup
               chmod 644 /etc/cron.d/mongodb-backup
 
-              LATEST_BACKUP=$(aws s3 ls "s3://${aws_s3_bucket.backup.id}/" --region "${var.aws_region}" \
-                | awk '{print $2}' | tr -d '/' | sort -r | head -1)
+              (
+                set +e
+                echo "Starting restore at $(date)" >> /var/log/mongodb-restore.log
 
-              if [ -n "$LATEST_BACKUP" ]; then
-                mkdir -p /opt/mongodb-restore
-                aws s3 cp \
-                  "s3://${aws_s3_bucket.backup.id}/$LATEST_BACKUP/" \
-                  "/opt/mongodb-restore/$LATEST_BACKUP/" \
-                  --recursive --region "${var.aws_region}"
+                LATEST_BACKUP=$(aws s3 ls "s3://${aws_s3_bucket.backup.id}/" --region "${var.aws_region}" 2>/dev/null \
+                  | grep 'PRE' | awk '{print $2}' | tr -d '/' | sort -r | head -1)
 
-                mongorestore \
-                  --host localhost \
-                  --authenticationDatabase admin \
-                  --username "$MONGO_USER" \
-                  --password "$MONGO_PASS" \
-                  --drop \
-                  "/opt/mongodb-restore/$LATEST_BACKUP/" \
-                  >> /var/log/mongodb-restore.log 2>&1 || true
+                if [ -n "$LATEST_BACKUP" ]; then
+                  echo "Restoring from backup: $LATEST_BACKUP" >> /var/log/mongodb-restore.log
+                  mkdir -p /opt/mongodb-restore
 
-                rm -rf /opt/mongodb-restore
-              fi
+                  aws s3 cp \
+                    "s3://${aws_s3_bucket.backup.id}/$LATEST_BACKUP/" \
+                    "/opt/mongodb-restore/$LATEST_BACKUP/" \
+                    --recursive --region "${var.aws_region}" \
+                    >> /var/log/mongodb-restore.log 2>&1
+
+                  mongorestore \
+                    --host localhost \
+                    --authenticationDatabase admin \
+                    --username "$MONGO_USER" \
+                    --password "$MONGO_PASS" \
+                    --drop \
+                    "/opt/mongodb-restore/$LATEST_BACKUP/" \
+                    >> /var/log/mongodb-restore.log 2>&1
+
+                  rm -rf /opt/mongodb-restore
+                  echo "Restore completed at $(date)" >> /var/log/mongodb-restore.log
+                else
+                  echo "No backups found in S3" >> /var/log/mongodb-restore.log
+                fi
+              ) || echo "Restore failed at $(date)" >> /var/log/mongodb-restore.log
               EOF
 
   tags = {

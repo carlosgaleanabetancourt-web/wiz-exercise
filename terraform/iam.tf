@@ -34,10 +34,11 @@ resource "aws_iam_role_policy" "mongodb_s3_backup" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "AllowBackupUpload"
+        Sid    = "AllowBackupOperations"
         Effect = "Allow"
         Action = [
-          "s3:PutObject"
+          "s3:PutObject",
+          "s3:GetObject"
         ]
         Resource = "${aws_s3_bucket.backup.arn}/*"
       },
