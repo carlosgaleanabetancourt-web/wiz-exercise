@@ -141,6 +141,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "backup" {
     id     = "expire-old-backups"
     status = "Enabled"
 
+    filter {}
+
     expiration {
       days = 30
     }
@@ -157,6 +159,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "backup_access_logs" {
   rule {
     id     = "expire-old-logs"
     status = "Enabled"
+
+    filter {}
 
     expiration {
       days = 90
