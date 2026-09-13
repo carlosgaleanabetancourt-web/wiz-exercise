@@ -35,8 +35,11 @@ The platform consists of:
 * Infrastructure provisioned entirely with **Terraform**
 * Kubernetes workloads protected with **NetworkPolicies, Pod Security Standards and hardened containers**
 * Security scanning integrated into **GitHub Actions**
-* Detection and monitoring through **AWS Config, GuardDuty, Inspector, CloudWatch and VPC Flow Logs**
-* Automated daily backups and **AWS cost-optimization schedules**
+* Detection and monitoring through **AWS Config, GuardDuty, Inspector, CloudTrail, CloudWatch and VPC Flow Logs**
+* Application-layer security with **security headers, cookie hardening and rate limiting**
+* **VPC endpoints** for private AWS service access (S3 Gateway + Secrets Manager Interface)
+* **EC2 auto-recovery** with CloudWatch alarm-triggered instance recovery
+* Automated daily backups with **S3 lifecycle policies** and **AWS cost-optimization schedules**
 
 > ⚠️ **Security exercise notice**
 >
@@ -108,14 +111,15 @@ The platform consists of:
 │   │ Ubuntu 20.04     │◄──────────│ Tasky / Go             │  │
 │   │ MongoDB 3.6.8    │           │ 2 replicas             │  │
 │   │ SSH :22          │           │ non-root               │  │
-│   └──────────────────┘           │ NetworkPolicy          │  │
-│                                  │ Pod Security Standards │  │
+│   │ Auto-recovery    │           │ NetworkPolicy          │  │
+│   └──────────────────┘           │ Pod Security Standards │  │
 │                                  └────────────────────────┘  │
 │                                                              │
-│   ┌──────────────────┐                                       │
-│   │    S3 Backup     │                                       │
-│   │    Bucket        │                                       │
-│   └──────────────────┘                                       │
+│   VPC Endpoints                                              │
+│   ┌──────────────────┐   ┌─────────────────────────────┐    │
+│   │  S3 Gateway      │   │  Secrets Manager Interface  │    │
+│   │  (all routes)    │   │  (private subnets)          │    │
+│   └──────────────────┘   └─────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -125,18 +129,22 @@ The platform consists of:
 
 | Area                        | Implementation                            |
 | --------------------------- | ----------------------------------------  |
-| ☁️ Cloud                    | AWS                                      |
-| 🏗️ Infrastructure           | Terraform                                |
-| ☸️ Containers               | Kubernetes / Amazon EKS                  |
-| 🔐 Application Security     | AWS WAFv2 + Kubernetes security controls |
-| 🛡️ IaC Security             | Checkov + Trivy                          |
-| 🐳 Container Security       | Trivy + Amazon Inspector                 |
-| 🔑 CI/CD Authentication     | GitHub OIDC                              |
-| 📊 Observability            | CloudWatch + Container Insights          |
-| 🚨 Threat Detection         | GuardDuty                                |
-| 🔎 Configuration Monitoring | AWS Config                               |
-| 💾 Backups                  | MongoDB → S3                             |
-| 💰 Cost Optimization        | EventBridge Scheduler                    |
+| ☁️ Cloud                    | AWS                                                      |
+| 🏗️ Infrastructure           | Terraform                                                |
+| ☸️ Containers               | Kubernetes / Amazon EKS                                  |
+| 🔐 Application Security     | AWS WAFv2 + security headers + cookie hardening          |
+| 🛡️ IaC Security             | Checkov + Trivy                                          |
+| 🐳 Container Security       | Trivy + Amazon Inspector                                 |
+| 🔑 CI/CD Authentication     | GitHub OIDC                                              |
+| 📊 Observability            | CloudWatch + Container Insights                          |
+| 🚨 Threat Detection         | GuardDuty                                                |
+| 🔎 Configuration Monitoring | AWS Config                                               |
+| 📝 Audit Logging            | CloudTrail with S3 log storage                           |
+| 🚦 Rate Limiting            | WAF (2,000 req/5 min) + app-level (5 req/min per IP)    |
+| 🔒 Private Connectivity     | VPC endpoints for S3 and Secrets Manager                 |
+| 🔄 Auto-Recovery            | CloudWatch alarm-triggered EC2 instance recovery         |
+| 💾 Backups                  | MongoDB → S3 with lifecycle policies (30-day expiration) |
+| 💰 Cost Optimization        | EventBridge Scheduler                                    |
 
 ---
 
@@ -173,7 +181,8 @@ The platform uses **defense in depth**, combining preventative and detective con
                     │                             │
                     │ Config · GuardDuty          │
                     │ Inspector · CloudWatch      │
-                    │ VPC Flow Logs · ECR         │
+                    │ CloudTrail · VPC Flow Logs  │
+                    │ VPC Endpoints · ECR         │
                     └─────────────────────────────┘
 ```
 
@@ -187,6 +196,7 @@ The ALB is protected with AWS managed rule groups:
 * `AWSManagedRulesKnownBadInputsRuleSet`
 * `AWSManagedRulesSQLiRuleSet`
 * IP-based rate limiting: **2,000 requests / 5 minutes**
+* Application-level rate limiting: **5 requests/minute per IP** on `/login` and `/signup`
 * WAF logging to CloudWatch Logs
 * BLOCK and COUNT actions captured for analysis
 
@@ -225,6 +235,21 @@ Security checks run automatically through GitHub Actions:
 * Pull-request based workflow
 * CI checks required before merge
 
+### Application Security
+
+The Go/Gin application includes hardened defaults:
+
+* **Security headers** — `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy`, `Referrer-Policy`, `Permissions-Policy`
+* **Cookie hardening** — JWT token cookie is `HttpOnly` + `SameSite=Lax`; all cookies set `Path` and `SameSite`
+* **Rate limiting** — IP-based token bucket on `/login` and `/signup` (5 requests/minute per IP, 429 on excess)
+
+### VPC Endpoints
+
+AWS service traffic stays within the VPC without traversing the public internet:
+
+* **S3 Gateway endpoint** — attached to all public and private route tables (free)
+* **Secrets Manager Interface endpoint** — deployed in private subnets with a dedicated security group (HTTPS from VPC CIDR only)
+
 ### Identity & Encryption
 
 * GitHub Actions uses **OIDC federation**
@@ -245,9 +270,10 @@ Security visibility is provided through multiple AWS services.
 | **AWS Config**           | Detect infrastructure misconfigurations     |
 | **Amazon Inspector**     | Continuous ECR image vulnerability scanning |
 | **GuardDuty**            | Threat detection                            |
+| **CloudTrail**           | AWS API audit logging                       |
 | **EKS Audit Logs**       | Kubernetes API activity                     |
 | **VPC Flow Logs**        | Network traffic visibility                  |
-| **CloudWatch Alarms**    | Infrastructure health                       |
+| **CloudWatch Alarms**    | Infrastructure health + EC2 auto-recovery   |
 | **WAF Logs**             | Web attack visibility                       |
 | **CloudWatch Dashboard** | Centralized security monitoring             |
 
@@ -278,6 +304,14 @@ Enabled data sources/features include:
 * EKS audit logs
 * EBS malware protection
 * RDS login activity
+
+### CloudTrail
+
+AWS API activity is recorded to a dedicated S3 bucket:
+
+* Single-region trail with log file validation enabled
+* Dedicated S3 bucket with public access blocked, AES256 encryption and 90-day lifecycle expiration
+* Bucket policy scoped to `cloudtrail.amazonaws.com` with `bucket-owner-full-control` ACL condition
 
 ### EKS Audit Logging
 
@@ -334,6 +368,27 @@ The purpose of the exercise is to demonstrate the ability to:
 5. Distinguish intentional vulnerabilities from secure design controls
 
 > **These configurations should be remediated before using this architecture in production.**
+
+---
+
+# 🔄 Resilience
+
+### EC2 Auto-Recovery
+
+The MongoDB EC2 instance is monitored by a CloudWatch alarm on `StatusCheckFailed_System`. When an underlying hardware failure is detected, AWS automatically migrates the instance to healthy hardware while preserving the instance ID, private IP, EBS volumes and Elastic IP.
+
+The alarm uses `treat_missing_data = "missing"` so it enters `INSUFFICIENT_DATA` during nightly shutdowns instead of triggering false alarms.
+
+### S3 Lifecycle Policies
+
+Automated data retention prevents unbounded storage growth:
+
+| Bucket | Rule | Retention |
+| ------ | ---- | --------- |
+| **Backup** | Expire objects | 30 days |
+| **Backup** | Expire noncurrent versions | 7 days |
+| **Backup access logs** | Expire objects | 90 days |
+| **CloudTrail logs** | Expire objects | 90 days |
 
 ---
 
@@ -481,6 +536,27 @@ No static AWS access keys are stored in GitHub.
 app/
 ├── Dockerfile
 ├── main.go
+├── go.mod
+├── auth/
+│   └── auth.go
+├── controllers/
+│   ├── userController.go
+│   └── todoController.go
+├── database/
+│   └── database.go
+├── middleware/
+│   └── ratelimit.go
+├── models/
+│   └── models.go
+├── assets/
+│   ├── login.html
+│   ├── todo.html
+│   ├── css/
+│   │   ├── login.css
+│   │   └── style.css
+│   └── js/
+│       ├── login.js
+│       └── script.js
 └── wizexercise.txt
 
 kubernetes/
@@ -489,26 +565,29 @@ kubernetes/
 ├── service.yaml
 ├── ingress.yaml
 ├── network-policy.yaml
-└── rbac.yaml
+├── rbac.yaml
+└── secret.yaml
 
 terraform/
-├── eks.tf
-├── mongodb.tf
-├── networking.tf
-├── waf.tf
-├── dashboard.tf
-├── scheduler.tf
-├── iam.tf
-├── security-groups.tf
-├── s3.tf
-├── config.tf
-├── guardduty.tf
-├── cloudwatch.tf
-├── secrets.tf
-├── ecr.tf
-├── alb-controller.tf
-├── ebs-encryption.tf
+├── networking.tf          # VPC, subnets, NAT, flow logs, VPC endpoints
+├── eks.tf                 # EKS cluster and node groups
+├── mongodb.tf             # MongoDB EC2 instance
+├── waf.tf                 # WAFv2 rules and web ACL
+├── cloudwatch.tf          # Alarms, EC2 auto-recovery, SNS
 ├── cloudwatch-observability.tf
+├── dashboard.tf           # CloudWatch security dashboard
+├── cloudtrail.tf          # CloudTrail with S3 logging
+├── guardduty.tf           # GuardDuty threat detection
+├── config.tf              # AWS Config rules
+├── iam.tf                 # IAM roles, OIDC, policies
+├── security-groups.tf     # Security groups
+├── s3.tf                  # S3 buckets, lifecycle policies
+├── secrets.tf             # Secrets Manager
+├── ecr.tf                 # ECR repository
+├── alb-controller.tf      # AWS Load Balancer Controller
+├── ebs-encryption.tf      # EBS default encryption
+├── scheduler.tf           # EventBridge cost-optimization schedules
+├── main.tf
 ├── providers.tf
 ├── variables.tf
 └── outputs.tf
@@ -525,7 +604,7 @@ scripts/
 
 ### Cloud
 
-* AWS VPC
+* AWS VPC + VPC Endpoints
 * Amazon EKS
 * EC2
 * S3
@@ -536,6 +615,7 @@ scripts/
 * Secrets Manager
 * GuardDuty
 * AWS Config
+* CloudTrail
 * Amazon Inspector
 * CloudWatch
 * EventBridge Scheduler
@@ -833,9 +913,9 @@ alb.ingress.kubernetes.io/ssl-redirect: "443"
 | **Email confirmation** | Verify user email addresses during signup using Amazon SES |
 | **Password recovery** | Token-based password reset flow with email delivery |
 | **ECR immutable tags** | Prevent image tag overwrites; remove `latest` tag push from CI |
-| **CloudWatch alarm tuning** | Change `treat_missing_data` to `"missing"` for alarms that fire during nightly shutdowns |
 | **MongoDB upgrade** | Upgrade from MongoDB 3.6.8 (EOL) to a supported version |
 | **Ubuntu upgrade** | Upgrade from Ubuntu 20.04 (EOL) to 22.04 or 24.04 LTS |
+| **MongoDB replica set** | Deploy a replica set for high availability and automatic failover |
 
 ---
 
