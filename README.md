@@ -116,10 +116,10 @@ The platform consists of:
 │                                  └────────────────────────┘  │
 │                                                              │
 │   VPC Endpoints                                              │
-│   ┌──────────────────┐   ┌─────────────────────────────┐    │
-│   │  S3 Gateway      │   │  Secrets Manager Interface  │    │
-│   │  (all routes)    │   │  (private subnets)          │    │
-│   └──────────────────┘   └─────────────────────────────┘    │
+│   ┌──────────────────┐   ┌─────────────────────────────┐     │
+│   │  S3 Gateway      │   │  Secrets Manager Interface  │     │
+│   │  (all routes)    │   │  (private subnets)          │     │
+│   └──────────────────┘   └─────────────────────────────┘     │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -140,7 +140,7 @@ The platform consists of:
 | 🚨 Threat Detection         | GuardDuty                                                |
 | 🔎 Configuration Monitoring | AWS Config                                               |
 | 📝 Audit Logging            | CloudTrail with S3 log storage                           |
-| 🚦 Rate Limiting            | WAF (2,000 req/5 min) + app-level (5 req/min per IP)    |
+| 🚦 Rate Limiting            | WAF (2,000 req/5 min) + app-level (5 req/min per IP)     |
 | 🔒 Private Connectivity     | VPC endpoints for S3 and Secrets Manager                 |
 | 🔄 Auto-Recovery            | CloudWatch alarm-triggered EC2 instance recovery         |
 | 💾 Backups                  | MongoDB → S3 with lifecycle policies (30-day expiration) |
