@@ -7,6 +7,14 @@ resource "aws_s3_bucket" "cloudtrail" {
   }
 }
 
+resource "aws_s3_bucket_versioning" "cloudtrail" {
+  bucket = aws_s3_bucket.cloudtrail.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "cloudtrail" {
   bucket = aws_s3_bucket.cloudtrail.id
 

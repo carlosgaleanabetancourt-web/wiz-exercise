@@ -40,6 +40,14 @@ resource "aws_s3_bucket" "backup_access_logs" {
   }
 }
 
+resource "aws_s3_bucket_versioning" "backup_access_logs" {
+  bucket = aws_s3_bucket.backup_access_logs.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "backup_access_logs" {
   bucket = aws_s3_bucket.backup_access_logs.id
 
