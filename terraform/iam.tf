@@ -573,6 +573,26 @@ resource "aws_iam_role_policy" "github_actions_terraform" {
           "dynamodb:DescribeTable"
         ]
         Resource = "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/wiz-exercise-tflock"
+      },
+      {
+        Sid    = "AllowCloudTrail"
+        Effect = "Allow"
+        Action = [
+          "cloudtrail:CreateTrail",
+          "cloudtrail:StartLogging",
+          "cloudtrail:StopLogging",
+          "cloudtrail:DeleteTrail",
+          "cloudtrail:DescribeTrails",
+          "cloudtrail:GetTrail",
+          "cloudtrail:GetTrailStatus",
+          "cloudtrail:PutEventSelectors",
+          "cloudtrail:GetEventSelectors",
+          "cloudtrail:UpdateTrail",
+          "cloudtrail:ListTags",
+          "cloudtrail:AddTags",
+          "cloudtrail:RemoveTags"
+        ]
+        Resource = "*"
       }
     ]
   })

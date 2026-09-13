@@ -21,6 +21,16 @@ import (
 var SECRET_KEY string = os.Getenv("SECRET_KEY")
 var userCollection *mongo.Collection = database.OpenCollection(database.Client, "user")
 
+func setCookie(w http.ResponseWriter, name, value string, expires time.Time, httpOnly bool) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     "/",
+		Expires:  expires,
+		HttpOnly: httpOnly,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
 
 func SignUp(c * gin.Context){
 	
@@ -63,22 +73,9 @@ func SignUp(c * gin.Context){
 		return
 	}
 
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:    "token",
-		Value:   token,
-		Expires: expirationTime,
-	})
-
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name : "userID",
-		Value : userId,
-		Expires: expirationTime,
-	})
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name : "username",
-		Value : username,
-		Expires: expirationTime,
-	})
+	setCookie(c.Writer, "token", token, expirationTime, true)
+	setCookie(c.Writer, "userID", userId, expirationTime, false)
+	setCookie(c.Writer, "username", username, expirationTime, false)
 
 	c.JSON(http.StatusOK, resultInsertionNumber)
 
@@ -130,34 +127,13 @@ func Login(c * gin.Context){
 			return
 		}
 
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name:    "token",
-			Value:   token,
-			Expires: expirationTime,
-		})
+		setCookie(c.Writer, "token", token, expirationTime, true)
+		setCookie(c.Writer, "userID", userId, expirationTime, false)
+		setCookie(c.Writer, "username", username, expirationTime, false)
 
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name : "userID",
-			Value : userId,
-			Expires: expirationTime,
-		})
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name : "username",
-			Value : username,
-			Expires: expirationTime,
-		})
-		
 	} else {
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name : "userID",
-			Value : userId,
-			Expires: expirationTime,
-		})
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name : "username",
-			Value : username,
-			Expires: expirationTime,
-		})
+		setCookie(c.Writer, "userID", userId, expirationTime, false)
+		setCookie(c.Writer, "username", username, expirationTime, false)
 	}
 	c.JSON(http.StatusOK, gin.H{"msg": "login successful"})
 }
@@ -165,10 +141,12 @@ func Login(c * gin.Context){
 func Logout(c *gin.Context) {
 	for _, name := range []string{"token", "userID", "username"} {
 		http.SetCookie(c.Writer, &http.Cookie{
-			Name:   name,
-			Value:  "",
-			Path:   "/",
-			MaxAge: -1,
+			Name:     name,
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: name == "token",
+			SameSite: http.SameSiteLaxMode,
 		})
 	}
 	c.Redirect(http.StatusFound, "/")
