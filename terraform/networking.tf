@@ -41,6 +41,51 @@ module "vpc" {
   }
 }
 
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = module.vpc.vpc_id
+  service_name = "com.amazonaws.${var.aws_region}.s3"
+
+  route_table_ids = concat(
+    module.vpc.public_route_table_ids,
+    module.vpc.private_route_table_ids
+  )
+
+  tags = {
+    Name = "${var.project_name}-s3-endpoint"
+  }
+}
+
+resource "aws_security_group" "vpc_endpoints" {
+  name_prefix = "${var.project_name}-vpce-"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-vpc-endpoints"
+  }
+}
+
+resource "aws_vpc_endpoint" "secretsmanager" {
+  vpc_id              = module.vpc.vpc_id
+  service_name        = "com.amazonaws.${var.aws_region}.secretsmanager"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+
+  subnet_ids = module.vpc.private_subnets
+
+  security_group_ids = [aws_security_group.vpc_endpoints.id]
+
+  tags = {
+    Name = "${var.project_name}-secretsmanager-endpoint"
+  }
+}
+
 resource "aws_flow_log" "vpc" {
   vpc_id               = module.vpc.vpc_id
   traffic_type         = "ALL"

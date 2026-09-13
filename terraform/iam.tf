@@ -268,7 +268,10 @@ resource "aws_iam_role_policy" "github_actions_terraform" {
           "ec2:CreateLaunchTemplate",
           "ec2:DeleteLaunchTemplate",
           "ec2:CreateLaunchTemplateVersion",
-          "ec2:ModifySubnetAttribute"
+          "ec2:ModifySubnetAttribute",
+          "ec2:CreateVpcEndpoint",
+          "ec2:DeleteVpcEndpoints",
+          "ec2:ModifyVpcEndpoint"
         ]
         Resource = "*"
       },
