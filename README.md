@@ -751,13 +751,101 @@ The key takeaway is that **no single security control is sufficient**. Preventat
 
 ---
 
+# 🚀 Production Enhancements
+
+The following enhancements are recommended before deploying this architecture to a production environment. They are not implemented in this exercise due to sandbox account restrictions or scope constraints.
+
+## HTTPS / TLS Termination
+
+The application currently serves traffic over **HTTP only**. In production, all traffic should be encrypted in transit using TLS.
+
+### Implementation path
+
+```text
+Route 53 (custom domain)
+        │
+        ▼
+ACM Certificate (auto-validated via DNS)
+        │
+        ▼
+ALB (HTTPS:443 listener + HTTP→HTTPS redirect)
+        │
+        ▼
+EKS Pods (HTTP:8080)
+```
+
+### Required changes
+
+| Component | Change |
+| --------- | ------ |
+| **Domain** | Register or transfer a domain to Route 53 |
+| **ACM** | Request a public certificate with DNS validation |
+| **Route 53** | Create an alias record pointing to the ALB |
+| **Ingress annotations** | Add `alb.ingress.kubernetes.io/certificate-arn`, `alb.ingress.kubernetes.io/ssl-redirect: "443"` and `alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'` |
+| **Security group** | Allow inbound `TCP/443` on the ALB security group |
+
+### Why it is not implemented
+
+The AWS sandbox account used for this exercise has a **Service Control Policy** that blocks `route53domains:RegisterDomain`. Without a registered domain, ACM cannot issue a certificate because DNS validation requires ownership of the domain's hosted zone. Self-signed certificates would not be trusted by browsers.
+
+### Terraform sketch
+
+```hcl
+resource "aws_acm_certificate" "app" {
+  domain_name       = "app.example.com"
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.app.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  zone_id = aws_route53_zone.main.zone_id
+  name    = each.value.name
+  type    = each.value.type
+  records = [each.value.record]
+  ttl     = 60
+}
+
+resource "aws_acm_certificate_validation" "app" {
+  certificate_arn         = aws_acm_certificate.app.arn
+  validation_record_fqdns = [for r in aws_route53_record.validation : r.fqdn]
+}
+```
+
+The Kubernetes ingress annotations would be updated to:
+
+```yaml
+alb.ingress.kubernetes.io/certificate-arn: <certificate_arn>
+alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+alb.ingress.kubernetes.io/ssl-redirect: "443"
+```
+
+## Additional production recommendations
+
+| Enhancement | Description |
+| ----------- | ----------- |
+| **Email confirmation** | Verify user email addresses during signup using Amazon SES |
+| **Password recovery** | Token-based password reset flow with email delivery |
+| **ECR immutable tags** | Prevent image tag overwrites; remove `latest` tag push from CI |
+| **CloudWatch alarm tuning** | Change `treat_missing_data` to `"missing"` for alarms that fire during nightly shutdowns |
+| **MongoDB upgrade** | Upgrade from MongoDB 3.6.8 (EOL) to a supported version |
+| **Ubuntu upgrade** | Upgrade from Ubuntu 20.04 (EOL) to 22.04 or 24.04 LTS |
+
+---
+
 # 📝 Final Notes
 
 This repository was built as a **cloud security / DevSecOps technical exercise**.
 
 The architecture intentionally combines secure engineering practices with specific vulnerabilities required by the exercise. The vulnerable components are explicitly documented so they can be identified, monitored and eventually remediated.
 
-**Production recommendation:** remove all intentional weaknesses before deploying a similar architecture to a real environment.
+**Production recommendation:** remove all intentional weaknesses and implement the enhancements listed above before deploying a similar architecture to a real environment.
 
 ---
 
