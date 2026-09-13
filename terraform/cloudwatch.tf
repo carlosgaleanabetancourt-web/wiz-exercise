@@ -65,10 +65,10 @@ resource "aws_cloudwatch_metric_alarm" "mongodb_cpu" {
 
 resource "aws_cloudwatch_metric_alarm" "mongodb_status_check" {
   alarm_name          = "${var.project_name}-mongodb-status-check"
-  alarm_description   = "MongoDB EC2 instance or system status check failed"
+  alarm_description   = "MongoDB EC2 system status check failed — triggers automatic recovery"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
-  metric_name         = "StatusCheckFailed"
+  metric_name         = "StatusCheckFailed_System"
   namespace           = "AWS/EC2"
   period              = 300
   statistic           = "Maximum"
