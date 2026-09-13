@@ -73,13 +73,13 @@ resource "aws_cloudwatch_metric_alarm" "mongodb_status_check" {
   period              = 300
   statistic           = "Maximum"
   threshold           = 0
-  treat_missing_data  = "breaching"
+  treat_missing_data  = "missing"
 
   dimensions = {
     InstanceId = aws_instance.mongodb.id
   }
 
-  alarm_actions = [aws_sns_topic.alarms.arn]
+  alarm_actions = [aws_sns_topic.alarms.arn, "arn:aws:automate:${var.aws_region}:ec2:recover"]
 }
 
 resource "aws_cloudwatch_metric_alarm" "eks_node_cpu" {
@@ -132,7 +132,7 @@ resource "aws_cloudwatch_metric_alarm" "eks_node_count" {
   period              = 300
   statistic           = "Average"
   threshold           = 2
-  treat_missing_data  = "breaching"
+  treat_missing_data  = "missing"
 
   dimensions = {
     ClusterName = module.eks.cluster_name
