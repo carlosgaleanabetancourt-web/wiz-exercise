@@ -158,6 +158,13 @@ resource "aws_instance" "mongodb" {
               ) || echo "Restore failed at $(date)" >> /var/log/mongodb-restore.log
               EOF
 
+  depends_on = [
+    aws_iam_role_policy.mongodb_s3_backup,
+    aws_iam_role_policy.mongodb_secrets_manager,
+    aws_iam_role_policy.mongodb_cloudwatch_logs,
+    aws_iam_role_policy.mongodb_ec2_access,
+  ]
+
   tags = {
     Name    = "${var.project_name}-mongodb"
     Purpose = "Wiz Technical Exercise"

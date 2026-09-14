@@ -92,6 +92,8 @@ resource "aws_flow_log" "vpc" {
   log_destination_type = "cloud-watch-logs"
   log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
   iam_role_arn         = aws_iam_role.vpc_flow_logs.arn
+
+  depends_on = [aws_iam_role_policy.vpc_flow_logs]
 }
 
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {

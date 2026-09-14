@@ -52,6 +52,8 @@ resource "aws_scheduler_schedule" "stop_mongodb" {
   name       = "${var.project_name}-stop-mongodb"
   group_name = "default"
 
+  depends_on = [aws_iam_role_policy.scheduler]
+
   flexible_time_window {
     mode = "OFF"
   }
@@ -73,6 +75,8 @@ resource "aws_scheduler_schedule" "start_mongodb" {
   name       = "${var.project_name}-start-mongodb"
   group_name = "default"
 
+  depends_on = [aws_iam_role_policy.scheduler]
+
   flexible_time_window {
     mode = "OFF"
   }
@@ -93,6 +97,8 @@ resource "aws_scheduler_schedule" "start_mongodb" {
 resource "aws_scheduler_schedule" "stop_eks_nodes" {
   name       = "${var.project_name}-stop-eks-nodes"
   group_name = "default"
+
+  depends_on = [aws_iam_role_policy.scheduler]
 
   flexible_time_window {
     mode = "OFF"
@@ -119,6 +125,8 @@ resource "aws_scheduler_schedule" "stop_eks_nodes" {
 resource "aws_scheduler_schedule" "start_eks_nodes" {
   name       = "${var.project_name}-start-eks-nodes"
   group_name = "default"
+
+  depends_on = [aws_iam_role_policy.scheduler]
 
   flexible_time_window {
     mode = "OFF"
