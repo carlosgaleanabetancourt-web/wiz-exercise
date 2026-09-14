@@ -36,5 +36,9 @@ resource "aws_eks_addon" "cloudwatch_observability" {
   addon_name               = "amazon-cloudwatch-observability"
   service_account_role_arn = aws_iam_role.cloudwatch_observability.arn
 
-  depends_on = [module.eks]
+  depends_on = [
+    module.eks,
+    aws_iam_role_policy_attachment.cloudwatch_observability,
+    aws_iam_role_policy_attachment.cloudwatch_observability_xray,
+  ]
 }

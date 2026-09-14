@@ -140,6 +140,11 @@ resource "aws_config_configuration_recorder" "main" {
       "AWS::EKS::Cluster",
     ]
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.config,
+    aws_iam_role_policy.config_s3,
+  ]
 }
 
 resource "aws_config_delivery_channel" "main" {
