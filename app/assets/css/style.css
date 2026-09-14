@@ -183,6 +183,16 @@ body{
   margin-left: 8px;
   flex-shrink: 0;
 }
+.uil::before{
+  font-style: normal;
+  display: inline-block;
+}
+.uil-pen::before{
+  content: "\270E";
+}
+.uil-trash::before{
+  content: "\2715";
+}
 .task-actions i{
   color: #888;
   cursor: pointer;
