@@ -378,6 +378,68 @@ resource "aws_cloudwatch_dashboard" "main" {
           view = "timeSeries"
         }
       },
+      {
+        type   = "text"
+        x      = 0
+        y      = 34
+        width  = 24
+        height = 1
+        properties = {
+          markdown = "# Detective Controls"
+        }
+      },
+      {
+        type   = "log"
+        x      = 0
+        y      = 35
+        width  = 12
+        height = 6
+        properties = {
+          title  = "CloudTrail: Recent API Errors"
+          region = var.aws_region
+          query  = "SOURCE '${aws_cloudwatch_log_group.cloudtrail.name}' | fields @timestamp, userIdentity.principalId as principal, eventName, errorCode, errorMessage | filter ispresent(errorCode) | sort @timestamp desc | limit 25"
+          view   = "table"
+        }
+      },
+      {
+        type   = "log"
+        x      = 12
+        y      = 35
+        width  = 12
+        height = 6
+        properties = {
+          title  = "CloudTrail: S3 Data Events"
+          region = var.aws_region
+          query  = "SOURCE '${aws_cloudwatch_log_group.cloudtrail.name}' | fields @timestamp, userIdentity.type as identityType, eventName, requestParameters.bucketName as bucket | filter eventSource = 's3.amazonaws.com' | sort @timestamp desc | limit 25"
+          view   = "table"
+        }
+      },
+      {
+        type   = "log"
+        x      = 0
+        y      = 41
+        width  = 12
+        height = 6
+        properties = {
+          title  = "VPC Flow Logs: Rejected Traffic"
+          region = var.aws_region
+          query  = "SOURCE '${aws_cloudwatch_log_group.vpc_flow_logs.name}' | fields @timestamp, srcAddr, dstAddr, dstPort, protocol, action | filter action = 'REJECT' | stats count(*) as rejections by srcAddr, dstAddr, dstPort | sort rejections desc | limit 25"
+          view   = "table"
+        }
+      },
+      {
+        type   = "log"
+        x      = 12
+        y      = 41
+        width  = 12
+        height = 6
+        properties = {
+          title  = "CloudTrail: IAM & Security Events"
+          region = var.aws_region
+          query  = "SOURCE '${aws_cloudwatch_log_group.cloudtrail.name}' | fields @timestamp, userIdentity.principalId as principal, eventName, eventSource | filter eventSource IN ['iam.amazonaws.com', 'guardduty.amazonaws.com', 'config.amazonaws.com', 'securityhub.amazonaws.com'] | sort @timestamp desc | limit 25"
+          view   = "table"
+        }
+      },
     ]
   })
 }

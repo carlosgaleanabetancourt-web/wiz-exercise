@@ -275,7 +275,7 @@ Security visibility is provided through multiple AWS services.
 | **VPC Flow Logs**        | Network traffic visibility                  |
 | **CloudWatch Alarms**    | Infrastructure health + EC2 auto-recovery   |
 | **WAF Logs**             | Web attack visibility                       |
-| **CloudWatch Dashboard** | Centralized security monitoring             |
+| **CloudWatch Dashboard** | Centralized security and detective controls monitoring |
 
 ### AWS Config
 
@@ -307,11 +307,13 @@ Enabled data sources/features include:
 
 ### CloudTrail
 
-AWS API activity is recorded to a dedicated S3 bucket:
+AWS API activity is recorded to a dedicated S3 bucket and forwarded to CloudWatch Logs for real-time querying:
 
 * Single-region trail with log file validation enabled
 * Dedicated S3 bucket with public access blocked, AES256 encryption and 90-day lifecycle expiration
 * Bucket policy scoped to `cloudtrail.amazonaws.com` with `bucket-owner-full-control` ACL condition
+* CloudWatch Logs integration with dedicated log group (30-day retention) and IAM role for CloudTrail delivery
+* Enables CloudWatch Logs Insights queries on the security dashboard
 
 ### EKS Audit Logging
 
@@ -327,20 +329,44 @@ scheduler
 
 ### CloudWatch
 
-The security dashboard contains **17 widgets**, covering:
+The security dashboard contains **21 widgets** across 5 sections:
 
-* WAF metrics
-* WAF logs
+* WAF metrics and logs
 * ALB performance
-* Pod health
+* Application pod health
 * Infrastructure status
-* Security events
+* Detective controls — CloudTrail API errors, S3 data events, VPC rejected traffic, IAM & security events
 
 Dashboard:
 
 ```text
 wiz-exercise-security
 ```
+
+---
+
+# 🧪 Security Simulation
+
+A read-only simulation script probes each intentional vulnerability and maps it to the detective control that catches it. Designed for live demo during a presentation.
+
+```bash
+bash scripts/security-simulation.sh          # interactive, pauses between scenarios
+bash scripts/security-simulation.sh --quick  # non-interactive, runs all scenarios
+```
+
+### Scenarios
+
+| # | Vulnerability | Probe | Detective Control |
+|---|--------------|-------|-------------------|
+| 1 | Public S3 bucket | Anonymous `curl` listing | AWS Config (`s3-public-read-prohibited`) |
+| 2 | SSH open to 0.0.0.0/0 | Security group rule query | AWS Config (`restricted-ssh`, `restricted-common-ports`) |
+| 3 | Over-privileged IAM | IAM policy inspection (`ec2:RunInstances` on `*`) | CloudTrail + GuardDuty |
+| 4 | Kubernetes cluster-admin | `kubectl auth can-i --list` | EKS audit logs + GuardDuty |
+| 5 | Threat detection | GuardDuty detector and findings status | GuardDuty (S3 + K8s audit logs) |
+
+All operations are **read-only** — no infrastructure is modified.
+
+Requires: `aws` CLI, `kubectl`, `curl`, `jq`.
 
 ---
 
@@ -595,7 +621,8 @@ terraform/
 scripts/
 ├── create-k8s-secrets.sh
 ├── deploy-app.sh
-└── mongodb-backup.sh
+├── mongodb-backup.sh
+└── security-simulation.sh
 ```
 
 ---

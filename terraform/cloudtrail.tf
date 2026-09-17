@@ -89,16 +89,63 @@ resource "aws_s3_bucket_policy" "cloudtrail" {
   })
 }
 
+resource "aws_cloudwatch_log_group" "cloudtrail" {
+  name              = "/${var.project_name}/cloudtrail"
+  retention_in_days = 30
+}
+
+resource "aws_iam_role" "cloudtrail_cloudwatch" {
+  name = "${var.project_name}-cloudtrail-cw"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "cloudtrail_cloudwatch" {
+  name = "cloudwatch-logs"
+  role = aws_iam_role.cloudtrail_cloudwatch.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "${aws_cloudwatch_log_group.cloudtrail.arn}:*"
+      }
+    ]
+  })
+}
+
 resource "aws_cloudtrail" "main" {
   name                       = "${var.project_name}-trail"
   s3_bucket_name             = aws_s3_bucket.cloudtrail.id
   is_multi_region_trail      = false
   enable_log_file_validation = true
 
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.cloudtrail.arn}:*"
+  cloud_watch_logs_role_arn  = aws_iam_role.cloudtrail_cloudwatch.arn
+
   tags = {
     Name    = "${var.project_name}-trail"
     Purpose = "Wiz Technical Exercise"
   }
 
-  depends_on = [aws_s3_bucket_policy.cloudtrail]
+  depends_on = [
+    aws_s3_bucket_policy.cloudtrail,
+    aws_iam_role_policy.cloudtrail_cloudwatch,
+  ]
 }
