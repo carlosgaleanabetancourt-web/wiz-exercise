@@ -1,5 +1,5 @@
 # Building the binary of the App
-FROM golang:1.26 AS build
+FROM golang:1.26-alpine AS build
 
 WORKDIR /go/src/tasky
 COPY . .
@@ -7,9 +7,9 @@ RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /go/src/tasky/tasky
 
 
-FROM alpine:3.21 AS release
+FROM alpine:3.24 AS release
 
-RUN adduser -D -u 1000 appuser
+RUN apk upgrade --no-cache && adduser -D -u 1000 appuser
 WORKDIR /app
 COPY --from=build --chown=appuser:appuser /go/src/tasky/tasky .
 COPY --from=build --chown=appuser:appuser /go/src/tasky/assets ./assets
