@@ -5,7 +5,7 @@ data "aws_ami" "mongodb" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
   }
 
   filter {
@@ -48,12 +48,26 @@ resource "aws_instance" "mongodb" {
               set -euo pipefail
 
               apt-get update -y
-              apt-get install -y mongodb awscli jq
+              apt-get install -y gnupg curl jq unzip
+
+              # Install AWS CLI v2
+              curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+              unzip -q /tmp/awscliv2.zip -d /tmp
+              /tmp/aws/install
+              rm -rf /tmp/aws /tmp/awscliv2.zip
+
+              # Install MongoDB 7.0 from official repo
+              curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | \
+                gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+              echo "deb [ signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu noble/mongodb-org/7.0 multiverse" \
+                > /etc/apt/sources.list.d/mongodb-org-7.0.list
+              apt-get update -y
+              apt-get install -y mongodb-org
 
               timedatectl set-timezone ${var.schedule_timezone}
 
-              systemctl enable mongodb
-              systemctl start mongodb
+              systemctl enable mongod
+              systemctl start mongod
 
               sleep 5
 
@@ -69,7 +83,7 @@ resource "aws_instance" "mongodb" {
               MONGO_USER=$(echo "$CREDS" | jq -r '.username')
               MONGO_PASS=$(echo "$CREDS" | jq -r '.password')
 
-              mongo admin --eval "
+              mongosh admin --eval "
                 db.createUser({
                   user: '$MONGO_USER',
                   pwd: '$MONGO_PASS',
@@ -77,12 +91,15 @@ resource "aws_instance" "mongodb" {
                 })
               "
 
-              sed -i 's/^#auth = true/auth = true/' /etc/mongodb.conf
-              grep -q '^auth' /etc/mongodb.conf || echo 'auth = true' >> /etc/mongodb.conf
+              # Enable auth and bind to all interfaces in mongod.conf (YAML format)
+              cat >> /etc/mongod.conf <<'MONGOCFG'
 
-              sed -i 's/^bind_ip.*/bind_ip = 0.0.0.0/' /etc/mongodb.conf
+security:
+  authorization: enabled
+MONGOCFG
+              sed -i 's/^  bindIp:.*/  bindIp: 0.0.0.0/' /etc/mongod.conf
 
-              systemctl restart mongodb
+              systemctl restart mongod
 
               cat > /opt/mongodb-backup.sh << 'BACKUP'
               #!/bin/bash
