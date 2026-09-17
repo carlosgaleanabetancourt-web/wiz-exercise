@@ -1,6 +1,6 @@
 module github.com/jeffthorne/tasky
 
-go 1.26
+go 1.26.8
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
